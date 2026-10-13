@@ -6,5 +6,5 @@ from src.domain.base import Entity
 @dataclass(slots=True)
 class Notification(Entity):
     websocket: WebSocket
-    user_id: int
+    user_ip: str
     afisha_id: int
