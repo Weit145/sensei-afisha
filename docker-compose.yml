@@ -35,5 +35,8 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
     ports:
       - "${APP_PORT:-8080}:8000"
+    volumes:
+      - uploads_data:/app/uploads
 volumes:
   db_data:
+  uploads_data:

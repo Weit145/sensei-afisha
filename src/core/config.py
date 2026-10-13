@@ -17,6 +17,7 @@ class Settings(BaseSettings):
         "INFO",
         validation_alias="LOG_LEVEL",
     )
+    upload_dir: str = Field("uploads", validation_alias="UPLOAD_DIR")
 
 
 settings = Settings()  # pyright: ignore[reportCallIssue]  # Defaults are supplied by Field.
