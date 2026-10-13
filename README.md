@@ -1,1 +1,21 @@
 # sensei-afisha
+
+## Запуск через Docker
+
+```sh
+make up
+```
+
+API доступно на `http://localhost:8080`. При запуске Compose дожидается готовности PostgreSQL, применяет миграции Alembic и запускает API. Данные PostgreSQL хранятся в Docker volume.
+
+Настройки портов и базы можно задать в `.env` по образцу `.env.example`. `DATABASE_URL` из примера предназначен для запуска приложения на хосте; внутри Compose адрес базы собирается из `POSTGRES_*` и имени сервиса `db`.
+
+```sh
+make logs                           # логи сервисов
+make migrate                        # применить миграции вручную
+make revision MESSAGE="add events"  # создать ревизию по изменениям моделей
+make down                           # остановить сервисы, сохранив данные
+make delete                         # остановить сервисы и удалить данные БД
+```
+
+Первая ревизия создаёт таблицу `users`. Для локального запуска Alembic нужен доступный PostgreSQL и подходящий `DATABASE_URL`, затем можно выполнить `alembic upgrade head`.
