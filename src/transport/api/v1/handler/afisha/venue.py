@@ -24,10 +24,10 @@ def check_role():
     pass
 
 class Admin:
-    id
+    id: uuid.UUID
 
 class User:
-    id
+    id: uuid.UUID
 
 @router.post(path="",status_code=status.HTTP_201_CREATED)
 async def create_venue(

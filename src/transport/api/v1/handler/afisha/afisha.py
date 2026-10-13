@@ -22,8 +22,8 @@ from src.transport.api.v1.schemas.afisha.afisha import (
     AfishaListResponse,
     CreateAfisha,
     ResponseAfisha,
-    UploadedImageResponse,
     UpdateAfisha,
+    UploadedImageResponse,
 )
 
 router = APIRouter(prefix="/afisha", tags=["Afisha"])
@@ -32,10 +32,10 @@ def check_role():
     pass
 
 class Admin:
-    id
+    id: uuid.UUID
 
 class User:
-    id
+    id: uuid.UUID
 
 @router.post("/images", status_code=status.HTTP_201_CREATED)
 async def upload_afisha_image(
@@ -92,7 +92,7 @@ async def list_afisha(
     page_size: Annotated[int, Query(ge=1, le=100)] = 20,
     search: str | None = None,
 )->AfishaListResponse:
-    return []
+    return AfishaListResponse()
 
 @router.get(path="/{afisha_id}",status_code=status.HTTP_200_OK)
 async def read_afisha(

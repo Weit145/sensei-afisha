@@ -6,12 +6,12 @@ import uvicorn
 from fastapi import FastAPI, status
 from fastapi.staticfiles import StaticFiles
 
-from .core.logging import setup_logging
 from .core.config import settings
+from .core.logging import setup_logging
 from .repositories.storage.postgres.db_helper import db_helper
-from .transport.api.v1.handler.user import router as users
 from .transport.api.v1.handler.afisha.afisha import router as afisha
 from .transport.api.v1.handler.afisha.venue import router as venue
+from .transport.api.v1.handler.user import router as users
 
 logger = logging.getLogger(__name__)
 setup_logging()
