@@ -9,7 +9,7 @@ class NotificationType(Enum):
     DISCUSSION = 2
     FEEDBACK = 3
 
-# содержит в себе тип сообзения и его текст
+# содержит в себе тип сообщения и его текст
 @dataclass(slot=True)
 class Notification(Protocol):
     n_type: NotificationType = field(default=Notification.MAIN_MENU)
