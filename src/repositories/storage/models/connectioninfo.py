@@ -4,7 +4,6 @@ from enum import Enum
 
 # это лежит в редис . server_id - id сервера на будущее, если их несколько будет
 # user_id - id юзера
-# chat_id - id обсуждения/отзывов . если нет , то главное меню
 class NotificationType(Enum):
     MAIN_MENU = 1
     DISCUSSION = 2
@@ -13,6 +12,5 @@ class NotificationType(Enum):
 @dataclass
 class ConnectionInfo():
     user_ip : str
-    chat_id : int | None
     server_id : int 
     n_type: NotificationType 
