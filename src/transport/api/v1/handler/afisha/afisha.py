@@ -8,23 +8,26 @@ from fastapi import (
     Form,
     Path,
     Query,
-    Request,
     UploadFile,
     status,
 )
 from pydantic import Json
 from sqlalchemy.ext.asyncio import AsyncSession
-from starlette.concurrency import run_in_threadpool
 
 from src.repositories.storage.postgres.db_helper import db_helper
-from src.transport.api.v1.handler.afisha.image_storage import save_image
+from src.transport.api.v1.map.afisha.afisha import (
+    map_to_domain,
+    map_to_list_response,
+    map_to_response,
+    map_to_update_domain,
+)
 from src.transport.api.v1.schemas.afisha.afisha import (
     AfishaListResponse,
     CreateAfisha,
     ResponseAfisha,
     UpdateAfisha,
-    UploadedImageResponse,
 )
+from src.usecase.afisha.afisha_service import afisha_service
 
 router = APIRouter(prefix="/afisha", tags=["Afisha"])
 
@@ -37,66 +40,62 @@ class Admin:
 class User:
     id: uuid.UUID
 
-@router.post("/images", status_code=status.HTTP_201_CREATED)
-async def upload_afisha_image(
-    request: Request,
-    image: Annotated[UploadFile, File()],
-    admin: Annotated[Admin, Depends(check_role)],
-) -> UploadedImageResponse:
-    image_id, filename = await run_in_threadpool(save_image, image)
-    return UploadedImageResponse(
-        id=image_id,
-        image_url=str(request.url_for("uploads", path=filename)),
-    )
-
 @router.post(path="",status_code=status.HTTP_201_CREATED)
 async def create_afisha(
     afisha: Annotated[Json[CreateAfisha], Form()],
-    admin:Annotated[Admin, Depends(check_role)],
+    _:Annotated[Admin, Depends(check_role)],
     session: Annotated[AsyncSession, Depends(db_helper.get_session)],
     images: Annotated[list[UploadFile] | None, File()] = None,
 )->ResponseAfisha:
-    return ResponseAfisha()
+    domain_afisha = map_to_domain(afisha)
+    result = await afisha_service.create_afisha(domain_afisha, session, images)
+    return map_to_response(result)
 
-@router.put(path="/{afisha_id}",status_code=status.HTTP_200_OK)
+@router.put(path="/{afisha_id}",status_code=status.HTTP_200_OK, response_model=ResponseAfisha)
 async def update_afisha(
     afisha:CreateAfisha,
-    admin:Annotated[Admin, Depends(check_role)],
+    _:Annotated[Admin, Depends(check_role)],
     afisha_id: Annotated[uuid.UUID, Path(title="The ID afisha")],
     session: Annotated[AsyncSession, Depends(db_helper.get_session)],
 )->ResponseAfisha:
-    return ResponseAfisha()
+    domain_afisha = map_to_domain(afisha)
+    result = await afisha_service.update_afisha(domain_afisha, afisha_id, session)
+    return map_to_response(result)
 
-@router.patch(path="/{afisha_id}",status_code=status.HTTP_200_OK)
+@router.patch(path="/{afisha_id}",status_code=status.HTTP_200_OK, response_model=ResponseAfisha)
 async def patch_afisha(
     afisha:UpdateAfisha,
-    admin:Annotated[Admin, Depends(check_role)],
+    _:Annotated[Admin, Depends(check_role)],
     afisha_id: Annotated[uuid.UUID, Path(title="The ID afisha")],
     session: Annotated[AsyncSession, Depends(db_helper.get_session)],
 )->ResponseAfisha:
-    return ResponseAfisha()
+    domain_update_afisha = map_to_update_domain(afisha)
+    result = await afisha_service.patch_afisha(domain_update_afisha, afisha_id, session)
+    return map_to_response(result)
 
 @router.delete(path="/{afisha_id}",status_code=status.HTTP_204_NO_CONTENT)
 async def delete_afisha(
-    admin:Annotated[Admin, Depends(check_role)],
+    _:Annotated[Admin, Depends(check_role)],
     afisha_id: Annotated[uuid.UUID, Path(title="The ID afisha")],
     session: Annotated[AsyncSession, Depends(db_helper.get_session)],
 )->None:
-    return
+    return await afisha_service.delete_afisha(afisha_id, session)
 
 
-@router.get(path="",  status_code=status.HTTP_200_OK)
+@router.get(path="",  status_code=status.HTTP_200_OK, response_model=AfishaListResponse)
 async def list_afisha(
     session: Annotated[AsyncSession, Depends(db_helper.get_session)],
     page: Annotated[int, Query(ge=1)] = 1,
     page_size: Annotated[int, Query(ge=1, le=100)] = 20,
     search: str | None = None,
 )->AfishaListResponse:
-    return AfishaListResponse()
+    result = await afisha_service.list_afisha(session, page, page_size, search)
+    return map_to_list_response(result)
 
-@router.get(path="/{afisha_id}",status_code=status.HTTP_200_OK)
+@router.get(path="/{afisha_id}",status_code=status.HTTP_200_OK, response_model=ResponseAfisha)
 async def read_afisha(
     afisha_id: Annotated[uuid.UUID, Path(title="The ID afisha")],
     session: Annotated[AsyncSession, Depends(db_helper.get_session)],
 )->ResponseAfisha:
-    return ResponseAfisha()
+    result = await afisha_service.read_afisha(afisha_id, session)
+    return map_to_response(result)
