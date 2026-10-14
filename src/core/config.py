@@ -17,6 +17,7 @@ class Settings(BaseSettings):
         "INFO",
         validation_alias="LOG_LEVEL",
     )
+    upload_dir: str = Field("uploads", validation_alias="UPLOAD_DIR")
 
     jwt_secret_key: str = Field(validation_alias="JWT_SECRET_KEY")
     jwt_algorithm: str = Field(
