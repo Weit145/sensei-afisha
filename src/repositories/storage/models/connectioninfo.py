@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from enum import Enum
+
 # это лежит в редис . server_id - id сервера на будущее, если их несколько будет
 # user_id - id юзера
 # chat_id - id обсуждения/отзывов . если нет , то главное меню

@@ -1,6 +1,0 @@
-# to do написать классс connection manager 
-
-
-
-async def Connect(self, websocket: WebSocket, user_id: int): ...
-async def Disconnect(self, user_id: int): ...
