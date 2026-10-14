@@ -1,6 +1,16 @@
 # sensei-afisha
 
+[Бэкенд обсуждений концертов: API, локальный пример и проверки](docs/discussion.md).
+
 ## Запуск через Docker
+
+Создайте `.env` из примера и задайте в нём `JWT_SECRET_KEY` (например, с помощью `openssl rand -hex 32`):
+
+```sh
+cp .env.example .env
+```
+
+Впишите сгенерированное значение после `JWT_SECRET_KEY=`, затем запустите:
 
 ```sh
 make up

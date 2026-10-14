@@ -1,25 +1,16 @@
-from datetime import datetime
-from ipaddress import IPv4Address, IPv6Address
 from uuid import UUID
 
-from pydantic import BaseModel, Field, IPvAnyAddress, field_validator
+from pydantic import BaseModel
+from pydantic.config import ConfigDict
+
+from src.domain.user import UserRole
 
 
-class CreateUser(BaseModel):
-    name: str = Field(min_length=1, max_length=100)
-    ip: IPvAnyAddress
+class CurrentUser(BaseModel):
+    model_config = ConfigDict(
+        frozen=True,
+        extra="ignore",
+    )
 
-    @field_validator("name")
-    @classmethod
-    def strip_name(cls, value: str) -> str:
-        value = value.strip()
-        if not value:
-            raise ValueError("Name cannot be blank")
-        return value
-
-
-class UserResponse(BaseModel):
-    id: UUID
-    name: str
-    ip: IPv4Address | IPv6Address
-    created_at: datetime
+    user_id: UUID
+    role: UserRole

@@ -26,7 +26,7 @@ class UploadedImageResponse(BaseModel):
 class Afisha(BaseModel):
     title: str = Field( ...,description="Название афиши")
     short_description: str | None = Field(None,description="Короткое описание")
-    description: str = Field(...,description="Полное описание")
+    description: str|None = Field(None,description="Полное описание")
     starts_at: datetime = Field(...,description="Начало мероприятия")
     ends_at: datetime = Field(...,description="Конец мероприятия")
     venue_ids: list[uuid.UUID] = Field(...,min_length=1,description="ID мест проведения")

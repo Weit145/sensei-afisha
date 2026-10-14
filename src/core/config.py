@@ -24,5 +24,18 @@ class Settings(BaseSettings):
     )
     upload_dir: str = Field("uploads", validation_alias="UPLOAD_DIR")
 
+    jwt_secret_key: str = Field(validation_alias="JWT_SECRET_KEY")
+    jwt_algorithm: str = Field(
+        "HS256",
+        validation_alias="JWT_ALGORITHM",
+    )
+    access_token_expire_minutes: int = Field(
+        30,
+        validation_alias="ACCESS_TOKEN_EXPIRE_MINUTES",
+    )
+    mode: str = Field(
+        "normal",
+        validation_alias="MODE",
+    )
 
 settings = Settings()  # pyright: ignore[reportCallIssue]  # Defaults are supplied by Field.
