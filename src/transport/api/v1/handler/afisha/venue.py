@@ -17,6 +17,7 @@ from src.transport.api.v1.map.afisha.venue import (
     map_to_response,
     map_to_update_domain,
 )
+from src.transport.api.v1.middleware.user_check import CurrentUser, require_admin
 from src.transport.api.v1.schemas.afisha.venue import (
     CreateVenue,
     ResponseVenue,
@@ -27,19 +28,11 @@ from src.usecase.afisha.venue_service import venue_service
 
 router = APIRouter(prefix="/venues", tags=["Venue"])
 
-def check_role():
-    pass
-
-class Admin:
-    id: uuid.UUID
-
-class User:
-    id: uuid.UUID
 
 @router.post(path="",status_code=status.HTTP_201_CREATED)
 async def create_venue(
     venue: CreateVenue,
-    _:Annotated[Admin, Depends(check_role)],
+    _:Annotated[CurrentUser, Depends(require_admin)],
     session: Annotated[AsyncSession, Depends(db_helper.get_session)],
 )->ResponseVenue:
     domain_venue = map_to_domain(venue)
@@ -50,7 +43,7 @@ async def create_venue(
 @router.put(path="/{venue_id}",status_code=status.HTTP_200_OK)
 async def update_venue(
     venue:CreateVenue,
-    _:Annotated[Admin, Depends(check_role)],
+    _:Annotated[CurrentUser, Depends(require_admin)],
     venue_id: Annotated[uuid.UUID, Path(title="The ID venue")],
     session: Annotated[AsyncSession, Depends(db_helper.get_session)],
 )->ResponseVenue:
@@ -61,7 +54,7 @@ async def update_venue(
 @router.patch(path="/{venue_id}",status_code=status.HTTP_200_OK)
 async def patch_venue(
     venue:UpdateVenue,
-    _:Annotated[Admin, Depends(check_role)],
+    _:Annotated[CurrentUser, Depends(require_admin)],
     venue_id: Annotated[uuid.UUID, Path(title="The ID venue")],
     session: Annotated[AsyncSession, Depends(db_helper.get_session)],
 )->ResponseVenue:
@@ -71,7 +64,7 @@ async def patch_venue(
 
 @router.delete(path="/{venue_id}",status_code=status.HTTP_204_NO_CONTENT)
 async def delete_venue(
-    _:Annotated[Admin, Depends(check_role)],
+    _:Annotated[CurrentUser, Depends(require_admin)],
     venue_id: Annotated[uuid.UUID, Path(title="The ID venue")],
     session: Annotated[AsyncSession, Depends(db_helper.get_session)],
 )->None:

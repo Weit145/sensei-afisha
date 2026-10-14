@@ -21,6 +21,7 @@ from src.transport.api.v1.map.afisha.afisha import (
     map_to_response,
     map_to_update_domain,
 )
+from src.transport.api.v1.middleware.user_check import CurrentUser, require_admin
 from src.transport.api.v1.schemas.afisha.afisha import (
     AfishaListResponse,
     CreateAfisha,
@@ -31,19 +32,10 @@ from src.usecase.afisha.afisha_service import afisha_service
 
 router = APIRouter(prefix="/afisha", tags=["Afisha"])
 
-def check_role():
-    pass
-
-class Admin:
-    id: uuid.UUID
-
-class User:
-    id: uuid.UUID
-
 @router.post(path="",status_code=status.HTTP_201_CREATED)
 async def create_afisha(
     afisha: Annotated[Json[CreateAfisha], Form()],
-    _:Annotated[Admin, Depends(check_role)],
+    _:Annotated[CurrentUser, Depends(require_admin)],
     session: Annotated[AsyncSession, Depends(db_helper.get_session)],
     images: Annotated[list[UploadFile] | None, File()] = None,
 )->ResponseAfisha:
@@ -54,7 +46,7 @@ async def create_afisha(
 @router.put(path="/{afisha_id}",status_code=status.HTTP_200_OK, response_model=ResponseAfisha)
 async def update_afisha(
     afisha:CreateAfisha,
-    _:Annotated[Admin, Depends(check_role)],
+    _:Annotated[CurrentUser, Depends(require_admin)],
     afisha_id: Annotated[uuid.UUID, Path(title="The ID afisha")],
     session: Annotated[AsyncSession, Depends(db_helper.get_session)],
 )->ResponseAfisha:
@@ -65,7 +57,7 @@ async def update_afisha(
 @router.patch(path="/{afisha_id}",status_code=status.HTTP_200_OK, response_model=ResponseAfisha)
 async def patch_afisha(
     afisha:UpdateAfisha,
-    _:Annotated[Admin, Depends(check_role)],
+    _:Annotated[CurrentUser, Depends(require_admin)],
     afisha_id: Annotated[uuid.UUID, Path(title="The ID afisha")],
     session: Annotated[AsyncSession, Depends(db_helper.get_session)],
 )->ResponseAfisha:
@@ -75,7 +67,7 @@ async def patch_afisha(
 
 @router.delete(path="/{afisha_id}",status_code=status.HTTP_204_NO_CONTENT)
 async def delete_afisha(
-    _:Annotated[Admin, Depends(check_role)],
+    _:Annotated[CurrentUser, Depends(require_admin)],
     afisha_id: Annotated[uuid.UUID, Path(title="The ID afisha")],
     session: Annotated[AsyncSession, Depends(db_helper.get_session)],
 )->None:
