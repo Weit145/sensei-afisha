@@ -10,8 +10,9 @@ from .core.config import settings
 from .core.logging import setup_logging
 from .repositories.storage.postgres.db_helper import db_helper
 from .transport.api.v1.handler.afisha.afisha import router as afisha
+from .transport.api.v1.handler.afisha.img import router as img
 from .transport.api.v1.handler.afisha.venue import router as venue
-from .transport.api.v1.handler.user import router as users
+from .transport.api.v1.handler.discussion.message import router as discussion
 
 logger = logging.getLogger(__name__)
 setup_logging()
@@ -31,10 +32,10 @@ app = FastAPI(
     title="Template Monolit",
 )
 
-app.include_router(users, prefix="/api")
-
 app.include_router(afisha, prefix="/api")
 app.include_router(venue, prefix="/api")
+app.include_router(img, prefix="/api")
+app.include_router(discussion, prefix="/api")
 
 @app.get("/_info", status_code=status.HTTP_200_OK)
 async def info():
