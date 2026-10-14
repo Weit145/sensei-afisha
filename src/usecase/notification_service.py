@@ -1,4 +1,3 @@
-# тут реализация всех функций 
 import logging
 from src.domain.notification import Notification
 from src.repositories.storage.redis.notification_repository import RedisNotificationRepository, redis_notification_repository
@@ -74,7 +73,12 @@ class NotificationService:
         self._enter_room(user_ip, MAIN_MENU_ID)
         await self.repo.update_afisha_id(user_ip, MAIN_MENU_ID)
 
-    async def SendAboutNewEvents(self, user_ip: str, notification: Notification) -> None:
+    async def SendAboutNewEvents(self, user_ip: str, text: str) -> None:
+        """Собирает Notification о новом событии и шлёт конкретному user_ip."""
+        notification = Notification(
+            type=NotificationType.MAIN_MENU,
+            payload={"text": text},
+        )
         payload = notification.model_dump_json()
         ws = self.local.get(user_ip)
         if ws is not None:
@@ -84,7 +88,12 @@ class NotificationService:
         if info is not None:
             await self.repo.publish_to_server(info.server_id, payload)
 
-    async def SendAboutNewDescussionMessages(self, afisha_id: int, notification: Notification) -> None:
+    async def SendAboutNewDescussionMessages(self, afisha_id: int, text: str) -> None:
+        """Собирает Notification о новом сообщении в обсуждении и шлёт всем в комнате."""
+        notification = Notification(
+            type=NotificationType.DISCUSSION,
+            payload={"afisha_id": afisha_id, "text": text},
+        )
         payload = notification.model_dump_json()
         user_ips = list(self.rooms.get(afisha_id, set()))
 
@@ -93,8 +102,19 @@ class NotificationService:
             if ws is not None:
                 await self._safe_send(ws, payload, user_ip)
 
-    async def SendAboutNewFeedBack( self, afisha_id: int, notification: Notification) -> None:
-        await self.SendAboutNewDescussionMessages(afisha_id, notification)
+    async def SendAboutNewFeedBack(self, afisha_id: int, text: str) -> None:
+        """Собирает Notification об отзыве и шлёт всем в комнате."""
+        notification = Notification(
+            type=NotificationType.FEEDBACK,
+            payload={"afisha_id": afisha_id, "text": text},
+        )
+        payload = notification.model_dump_json()
+        user_ips = list(self.rooms.get(afisha_id, set()))
+
+        for user_ip in user_ips:
+            ws = self.local.get(user_ip)
+            if ws is not None:
+                await self._safe_send(ws, payload, user_ip)
         
     def _enter_room(self, user_ip: str, afisha_id: int) -> None:
         """Добавляет user_ip в комнату afisha_id (RAM-индексы)."""
