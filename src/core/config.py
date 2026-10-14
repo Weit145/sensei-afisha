@@ -18,10 +18,18 @@ class Settings(BaseSettings):
         validation_alias="LOG_LEVEL",
     )
 
-    JWT_SECRET_KEY: str
-    JWT_ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    MODE: str = "normal"
-
+    jwt_secret_key: str = Field(validation_alias="JWT_SECRET_KEY")
+    jwt_algorithm: str = Field(
+        "HS256",
+        validation_alias="JWT_ALGORITHM",
+    )
+    access_token_expire_minutes: int = Field(
+        30,
+        validation_alias="ACCESS_TOKEN_EXPIRE_MINUTES",
+    )
+    mode: str = Field(
+        "normal",
+        validation_alias="MODE",
+    )
 
 settings = Settings()  # pyright: ignore[reportCallIssue]  # Defaults are supplied by Field.

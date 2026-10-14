@@ -5,7 +5,9 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from src.infrastructure.auth.jwt import decode_token
+from src.domain.user import UserRole
+from src.infrastructure.jwt import decode_token
+from src.transport.api.v1.schemas.auth import CurrentUser
 
 logger = logging.getLogger(__name__)
 
@@ -16,10 +18,10 @@ def get_current_user(
         HTTPAuthorizationCredentials,
         Depends(bearer),
     ],
-) -> dict:
+) -> CurrentUser:
     try:
         payload = decode_token(credentials.credentials)
-        return {"user_id": payload["user_id"], "role": payload["role"]}
+        return CurrentUser.model_validate(payload)
 
     except ValueError as exc:
         logger.warning("HTTP_401_UNAUTHORIZED, invalid token: %s", exc)
@@ -28,14 +30,21 @@ def get_current_user(
             detail={"error": {"code": "UNAUTHORIZED", "message": "invalid token"}}
         )
 
+CurrentUserDep = Annotated[
+    CurrentUser,
+    Depends(get_current_user),
+]
+
+
 def require_admin(
-    current_user: Annotated[
-        dict,
-        Depends(get_current_user),
-    ],
-) -> dict:
-    if current_user["role"] != "admin":
-        logger.warning("HTTP_403_FORBIDDEN, admin role required, user_id: %s, user_role: %s", current_user["user_id"], current_user["role"])
+    current_user: CurrentUserDep,
+) -> CurrentUser:
+    if current_user.role != UserRole.ADMIN:
+        logger.warning(
+            "HTTP_403_FORBIDDEN, admin role required, user_id: %s, user_role: %s",
+            current_user.user_id,
+            current_user.role,
+        )
         raise HTTPException(
             status_code = status.HTTP_403_FORBIDDEN,
             detail = {"error": {"code": "FORBIDDEN", "message": "admin role required"}},
@@ -43,12 +52,14 @@ def require_admin(
     return current_user
 
 def require_user(
-    current_user: Annotated[
-        dict,
-        Depends(get_current_user),
-    ],
-) -> dict:
-    if current_user["role"] != "user":
+    current_user: CurrentUserDep,
+) -> CurrentUser:
+    if current_user.role != UserRole.USER:
+        logger.warning(
+            "HTTP_403_FORBIDDEN, user role required, user_id: %s, user_role: %s",
+            current_user.user_id,
+            current_user.role,
+        )
         raise HTTPException(
             status_code = status.HTTP_403_FORBIDDEN,
             detail = {"error": {"code": "FORBIDDEN", 'message': "user role required"}},
