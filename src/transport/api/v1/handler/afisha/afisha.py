@@ -15,14 +15,14 @@ from pydantic import Json
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.repositories.storage.postgres.db_helper import db_helper
-from src.transport.api.v1.map.afisha.afisha import (
-    map_to_domain,
-    map_to_list_response,
-    map_to_response,
-    map_to_update_domain,
+from src.transport.api.v1.map.afisha import (
+    map_afisha_to_domain as map_to_domain,
+    map_afisha_to_list_response as map_to_list_response,
+    map_afisha_to_response as map_to_response,
+    map_afisha_to_update_domain as map_to_update_domain,
 )
 from src.transport.api.v1.middleware.user_check import CurrentUser, require_admin
-from src.transport.api.v1.schemas.afisha.afisha import (
+from src.transport.api.v1.schemas.afisha import (
     AfishaListResponse,
     CreateAfisha,
     ResponseAfisha,

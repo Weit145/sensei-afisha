@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from src.domain.afisha.venue import Venue
+from src.domain.afisha import Venue
 
 
 @dataclass

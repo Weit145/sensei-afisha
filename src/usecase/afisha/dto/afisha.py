@@ -2,7 +2,7 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from src.domain.afisha.afisha import Afisha
+from src.domain.afisha import Afisha
 
 
 @dataclass
