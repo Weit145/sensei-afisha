@@ -1,18 +1,23 @@
 from urllib.parse import quote
 
-from src.domain.afisha.afisha import Afisha, AfishaStatus, AfishaUpdate
-from src.transport.api.v1.schemas.afisha.afisha import (
+from src.domain.afisha import Afisha, AfishaStatus, AfishaUpdate
+from src.transport.api.v1.schemas.afisha import (
     AfishaImageResponse,
     AfishaListResponse,
     CreateAfisha,
     ResponseAfisha,
     ResponseShortAfisha,
     UpdateAfisha,
+    UploadedImageResponse,
 )
-from src.transport.api.v1.schemas.afisha.afisha import (
+from src.transport.api.v1.schemas.afisha import (
     AfishaStatus as ResponseAfishaStatus,
 )
-from src.usecase.afisha.dto.afisha import AfishaDetailResult, AfishaListResult
+from src.usecase.afisha.dto import (
+    AfishaDetailResult,
+    AfishaImageItem,
+    AfishaListResult,
+)
 
 
 def map_to_domain(afisha: CreateAfisha) -> Afisha:
@@ -44,7 +49,6 @@ def map_to_response(
         status=ResponseAfishaStatus(afisha.status.value),
         images=map_list_dto_to_response_img(result),
         reviews_id=result.reviews_id,
-        average_id=result.average_id,
         created_at=result.created_at,
         updated_at=result.updated_at,
     )
@@ -115,3 +119,10 @@ def map_list_to_short_afish(
 
 def _image_url(file_name: str) -> str:
     return f"/uploads/{quote(file_name, safe='')}"
+
+
+def map_to_uploaded_image_response(image: AfishaImageItem) -> UploadedImageResponse:
+    return UploadedImageResponse(
+        id=image.id,
+        image_url=_image_url(image.file_name),
+    )

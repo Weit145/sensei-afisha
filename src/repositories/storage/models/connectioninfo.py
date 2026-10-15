@@ -1,6 +1,6 @@
 from dataclasses import dataclass
-
 from enum import Enum
+
 
 # это лежит в редис . server_id - id сервера на будущее, если их несколько будет
 # user_id - id юзера
@@ -11,7 +11,7 @@ class NotificationType(Enum):
 
 MAIN_MENU_ID = -1
 @dataclass
-class ConnectionInfo():
+class ConnectionInfo:
     user_ip : str
     server_id : int 
     n_type: NotificationType 

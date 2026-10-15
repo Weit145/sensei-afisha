@@ -11,14 +11,20 @@ from fastapi import (
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.repositories.storage.postgres.db_helper import db_helper
-from src.transport.api.v1.map.afisha.venue import (
-    map_to_domain,
-    map_to_list_response,
-    map_to_response,
-    map_to_update_domain,
+from src.transport.api.v1.map.afisha import (
+    map_venue_to_domain as map_to_domain,
+)
+from src.transport.api.v1.map.afisha import (
+    map_venue_to_list_response as map_to_list_response,
+)
+from src.transport.api.v1.map.afisha import (
+    map_venue_to_response as map_to_response,
+)
+from src.transport.api.v1.map.afisha import (
+    map_venue_to_update_domain as map_to_update_domain,
 )
 from src.transport.api.v1.middleware.user_check import CurrentUser, require_admin
-from src.transport.api.v1.schemas.afisha.venue import (
+from src.transport.api.v1.schemas.afisha import (
     CreateVenue,
     ResponseVenue,
     UpdateVenue,
@@ -78,7 +84,7 @@ async def list_venues(
     page_size: Annotated[int, Query(ge=1, le=100)] = 20,
     search: str | None = None,
 ) -> VenueListResponse:
-    result = await venue_service.list_venue(session,page,page_size)
+    result = await venue_service.list_venue(session, page, page_size, search)
     return map_to_list_response(result)
 
 

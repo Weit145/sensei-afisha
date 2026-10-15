@@ -1,11 +1,14 @@
 import uuid
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Index, Text, Uuid, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.repositories.storage.models.base import Base
 
+if TYPE_CHECKING:
+    from ..afisha import AfishaModel
 
 class MessageModel(Base):
     __tablename__ = "discussion_messages"
@@ -34,3 +37,5 @@ class MessageModel(Base):
     deleted_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+
+    afisha: Mapped["AfishaModel"] = relationship(back_populates="messages")

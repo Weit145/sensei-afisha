@@ -1,11 +1,11 @@
-from src.domain.afisha.venue import Venue, VenueUpdate
-from src.transport.api.v1.schemas.afisha.venue import (
+from src.domain.afisha import Venue, VenueUpdate
+from src.transport.api.v1.schemas.afisha import (
     CreateVenue,
     ResponseVenue,
     UpdateVenue,
     VenueListResponse,
 )
-from src.usecase.afisha.dto.venue import VenueListResult
+from src.usecase.afisha.dto import VenueListResult
 
 
 def map_to_domain(venue: CreateVenue) -> Venue:
