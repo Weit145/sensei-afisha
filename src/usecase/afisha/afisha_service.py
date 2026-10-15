@@ -176,7 +176,6 @@ class AfishaService:
     def _stub_detail(afisha: Afisha) -> AfishaDetailResult:
         return AfishaDetailResult(
             afisha=afisha,
-            reviews_id=uuid.uuid4(), # Заглушка пока нет id
             created_at=afisha.created_at,
             updated_at=afisha.updated_at,
         )

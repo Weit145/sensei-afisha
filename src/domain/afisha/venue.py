@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 from src.domain.base import Entity
+from src.domain.err import InvalidDataError
 
 
 @dataclass(slots=True, kw_only=True)
@@ -14,19 +15,19 @@ class Venue(Entity):
 
     def __post_init__(self) -> None:
         if not self.name.strip():
-            raise ValueError("Название площадки не может быть пустым")
+            raise InvalidDataError("Название площадки не может быть пустым")
 
         if not self.city.strip():
-            raise ValueError("Город не может быть пустым")
+            raise InvalidDataError("Город не может быть пустым")
 
         if not self.address.strip():
-            raise ValueError("Адрес не может быть пустым")
+            raise InvalidDataError("Адрес не может быть пустым")
 
         if self.latitude is not None and (not -90 <= self.latitude <= 90):
-                raise ValueError("Некорректная широта")
+                raise InvalidDataError("Некорректная широта")
 
         if self.longitude is not None and (not -180 <= self.longitude <= 180):
-                raise ValueError("Некорректная долгота")
+                raise InvalidDataError("Некорректная долгота")
 
 @dataclass(slots=True, kw_only=True)
 class VenueUpdate(Entity):
@@ -39,7 +40,7 @@ class VenueUpdate(Entity):
 
     def __post_init__(self) -> None:
         if self.latitude is not None and (not -90 <= self.latitude <= 90):
-                raise ValueError("Некорректная широта")
+                raise InvalidDataError("Некорректная широта")
 
         if self.longitude is not None and (not -180 <= self.longitude <= 180):
-                raise ValueError("Некорректная долгота")
+                raise InvalidDataError("Некорректная долгота")
