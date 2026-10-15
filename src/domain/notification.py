@@ -10,8 +10,8 @@ class NotificationType(Enum):
     FEEDBACK = 3
 
 # содержит в себе тип сообщения и его текст
-@dataclass(slot=True)
-class Notification(Protocol):
-    n_type: NotificationType = field(default=Notification.MAIN_MENU)
+@dataclass(slots=True)
+class Notification:
+    n_type: NotificationType = field(default=NotificationType.MAIN_MENU)
     content: str = field(default="") 
 
