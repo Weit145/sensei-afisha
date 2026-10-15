@@ -1,12 +1,13 @@
-from src.domain.user import User
+from src.domain.user import User, UserRole
 from src.repositories.storage.models.user import UserModel
 
 
 def map_to_model(user: User) -> UserModel:
     return UserModel(
         id=user.id,
-        name=user.name,
-        ip=user.ip,
+        username=user.username,
+        role=user.role.value,
+        hashed_password=user.hashed_password,
         created_at=user.created_at,
     )
 
@@ -14,7 +15,8 @@ def map_to_model(user: User) -> UserModel:
 def map_to_domain(model: UserModel) -> User:
     return User(
         id=model.id,
-        name=model.name,
-        ip=model.ip,
+        username=model.username,
+        role=UserRole(model.role),
+        hashed_password=model.hashed_password,
         created_at=model.created_at,
     )
