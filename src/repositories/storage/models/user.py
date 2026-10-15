@@ -23,3 +23,8 @@ class UserModel(Base):
         nullable=False,
         default=lambda: datetime.now(UTC),
     )
+    reviews: Mapped[list["ReviewModel"]] = relationship(
+    "ReviewModel",
+    back_populates="author",
+    passive_deletes=True,
+)
