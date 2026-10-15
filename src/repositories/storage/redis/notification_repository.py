@@ -1,19 +1,17 @@
 
 
-
-
-class RedisNotificationRepository:
-    from redis.asyncio import Redis
+from redis.asyncio import Redis
 
 from src.repositories.storage.models.connectioninfo import (
     ConnectionInfo,
     NotificationType,
 )
+from src.repositories.storage.redis.db_helper import redis_helper
 
 
 class RedisNotificationRepository:
 
-    def __init__(self, redis: redis_helper) -> None:
+    def __init__(self, redis: Redis) -> None:
         self.redis = redis
 
     async def save_notification(self, info: ConnectionInfo, ttl: int = 3600) -> None:
@@ -61,4 +59,4 @@ class RedisNotificationRepository:
         """Публикует сообщение в канал конкретного сервера."""
         await self.redis.publish(f"ws:server:{server_id}", payload)
 
-redis_notification_repositor = RedisNotificationRepository(redis_helper)
+redis_notification_repository = RedisNotificationRepository(redis_helper.connection)
