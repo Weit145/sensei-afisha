@@ -13,8 +13,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.repositories.storage.postgres.db_helper import db_helper
 from src.transport.api.v1.map.afisha import (
     map_venue_to_domain as map_to_domain,
+)
+from src.transport.api.v1.map.afisha import (
     map_venue_to_list_response as map_to_list_response,
+)
+from src.transport.api.v1.map.afisha import (
     map_venue_to_response as map_to_response,
+)
+from src.transport.api.v1.map.afisha import (
     map_venue_to_update_domain as map_to_update_domain,
 )
 from src.transport.api.v1.middleware.user_check import CurrentUser, require_admin

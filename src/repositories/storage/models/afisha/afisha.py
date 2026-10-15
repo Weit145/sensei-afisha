@@ -18,6 +18,7 @@ from ..base import Base
 from .association import afisha_venues
 
 if TYPE_CHECKING:
+    from ..discussion.message import MessageModel
     from .img import AfishaImageModel
     from .venue import VenueModel
 
@@ -89,4 +90,8 @@ class AfishaModel(Base):
     images: Mapped[list["AfishaImageModel"]] = relationship(
         back_populates="afisha",
         cascade="all, delete-orphan",
+    )
+
+    messages: Mapped[list["MessageModel"]] = relationship(
+        back_populates="afisha",
     )

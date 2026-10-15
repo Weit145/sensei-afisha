@@ -8,8 +8,14 @@ from src.domain.afisha import Afisha, AfishaUpdate
 from src.infrastructure.img import ImgInfastructure as ImgInfastructureMain
 from src.repositories.storage.map.afisha import (
     map_afisha_to_domain as map_to_domain,
+)
+from src.repositories.storage.map.afisha import (
     map_afisha_to_list_item as map_to_list_item,
+)
+from src.repositories.storage.map.afisha import (
     map_afisha_to_model as map_to_model,
+)
+from src.repositories.storage.map.afisha import (
     map_file_names_to_models,
     map_to_image_item,
 )
@@ -162,7 +168,6 @@ class AfishaService:
         return AfishaDetailResult(
             afisha=afisha,
             reviews_id=uuid.uuid4(), # Заглушка пока нет id
-            average_id=uuid.uuid4(), # Заглушка пока нет id
             created_at=afisha.created_at,
             updated_at=afisha.updated_at,
         )

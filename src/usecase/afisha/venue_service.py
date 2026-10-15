@@ -5,6 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.domain.afisha import Venue, VenueUpdate
 from src.repositories.storage.map.afisha import (
     map_venue_to_domain as map_to_domain,
+)
+from src.repositories.storage.map.afisha import (
     map_venue_to_model as map_to_model,
 )
 from src.repositories.storage.postgres.afisha import SQLAlchemyVenueRepository

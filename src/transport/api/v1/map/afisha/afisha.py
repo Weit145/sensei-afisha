@@ -4,12 +4,14 @@ from src.domain.afisha import Afisha, AfishaStatus, AfishaUpdate
 from src.transport.api.v1.schemas.afisha import (
     AfishaImageResponse,
     AfishaListResponse,
-    AfishaStatus as ResponseAfishaStatus,
     CreateAfisha,
     ResponseAfisha,
     ResponseShortAfisha,
     UpdateAfisha,
     UploadedImageResponse,
+)
+from src.transport.api.v1.schemas.afisha import (
+    AfishaStatus as ResponseAfishaStatus,
 )
 from src.usecase.afisha.dto import (
     AfishaDetailResult,
@@ -47,7 +49,6 @@ def map_to_response(
         status=ResponseAfishaStatus(afisha.status.value),
         images=map_list_dto_to_response_img(result),
         reviews_id=result.reviews_id,
-        average_id=result.average_id,
         created_at=result.created_at,
         updated_at=result.updated_at,
     )

@@ -1,14 +1,14 @@
 """Allow afisha without a description.
 
-Revision ID: 20261014_03
-Revises: 20261014_02
+Revision ID: 20261014_05
+Revises: 20261014_04
 """
 
 import sqlalchemy as sa
 from alembic import op
 
-revision = "20261014_03"
-down_revision = "20261014_02"
+revision = "20261014_05"
+down_revision = "20261014_04"
 branch_labels = None
 depends_on = None
 
