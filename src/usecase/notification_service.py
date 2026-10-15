@@ -15,8 +15,6 @@ from src.repositories.storage.redis.notification_repository import (
 
 logger = logging.getLogger("NotificaionService")
 
-MAIN_MENU_ID = -1
-
 class NotificationService: 
     def __init__(self, repo: RedisNotificationRepository, server_id: int):
         self.repo = repo
@@ -33,18 +31,18 @@ class NotificationService:
 
     async def Connect(self, ws: WebSocket, user_ip: str,)->bool:
         try:
-            await websocket.accept()
+            await ws.accept()
         except Exception:
             logger.exception("Failed to accept websocket for user_ip=%s", user_ip)
             return False
 
-        self.local[user_ip] = websocket
+        self.local[user_ip] = ws
         self._enter_room(user_ip, MAIN_MENU_ID)
 
         await self.repo.save_notification(ConnectionInfo(
         user_ip=user_ip, 
         server_id=self.server_id, 
-        n_type=n_type, 
+        n_type=NotificationType.MAIN_MENU,
         afisha_id=MAIN_MENU_ID))
 
         return True
@@ -60,7 +58,7 @@ class NotificationService:
     async def CheckNotificationConnection(self, user_ip: str)->bool:
         if user_ip in self.local:
             return True
-        return self.repo.connection_exists(user_ip)
+        return await self.repo.connection_exists(user_ip)
         
     async def SwitchAfisha(self, user_ip: str, afisha_id: int) -> None:
         self._leave_room(user_ip)
@@ -122,12 +120,12 @@ class NotificationService:
         
     def _enter_room(self, user_ip: str, afisha_id: int) -> None:
         """Добавляет user_ip в комнату afisha_id (RAM-индексы)."""
-        self.current_room[user_ip] = afisha_id
+        self.current_afisha[user_ip] = afisha_id
         self.rooms.setdefault(afisha_id, set()).add(user_ip)
 
     def _leave_room(self, user_ip: str) -> None:
         """Убирает user_ip из его текущей комнаты (RAM-индексы)."""
-        old = self.current_room.pop(user_ip, None)
+        old = self.current_afisha.pop(user_ip, None)
         if old is None:
             return
         room = self.rooms.get(old)
