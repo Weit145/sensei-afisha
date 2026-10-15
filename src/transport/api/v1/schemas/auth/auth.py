@@ -1,3 +1,4 @@
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -21,8 +22,20 @@ class UserResponse(BaseModel):
     role: UserRole
 
 
+class LoginRequest(BaseModel):
+    username: str = Field(min_length=1, max_length=30)
+    password: str = Field(min_length=1, max_length=128)
+
+
+class AuthResponse(UserResponse):
+    access_token: str
+    token_type: Literal["bearer"] = "bearer"
+    expires_in: int
+
+
 class CurrentUser(BaseModel):
     model_config = ConfigDict(frozen=True, extra="ignore")
 
     user_id: UUID
+    username: str
     role: UserRole

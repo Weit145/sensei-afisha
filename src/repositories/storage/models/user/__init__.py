@@ -1,4 +1,5 @@
-from .association import afisha_participation
+from .association import user_afisha_follows
+from .session import UserSessionModel
 from .user import UserModel
 
-__all__ = ("UserModel", "afisha_participation")
+__all__ = ("UserModel", "UserSessionModel", "user_afisha_follows")

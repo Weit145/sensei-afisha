@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from ..afisha import AfishaModel
 
 from ..base import Base
-from .association import afisha_participation
+from .association import user_afisha_follows
 
 
 class UserModel(Base):
@@ -22,7 +22,7 @@ class UserModel(Base):
         nullable=False,
         default=lambda: datetime.now(UTC),
     )
-    afishas: Mapped[list["AfishaModel"]] = relationship(
-        secondary=afisha_participation,
-        back_populates="participants",
+    followed_afishas: Mapped[list["AfishaModel"]] = relationship(
+        secondary=user_afisha_follows,
+        back_populates="followers",
     )

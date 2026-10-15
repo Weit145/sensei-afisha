@@ -4,6 +4,7 @@ from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI, status
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from .core.config import settings
@@ -31,6 +32,14 @@ async def lifespan(_app: FastAPI):
 app = FastAPI(
     lifespan=lifespan,
     title="Template Monolit",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Requested-With"],
 )
 
 app.include_router(afisha, prefix="/api")

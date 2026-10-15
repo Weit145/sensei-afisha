@@ -28,8 +28,6 @@ class Afisha(Entity):
 
     updated_at: datetime = field(default_factory=utc_now)
 
-    users_ids: list[uuid.UUID] = field(default_factory=list)
-
     def __post_init__(self):
         if self.ends_at <= self.starts_at:
             raise ValueError(

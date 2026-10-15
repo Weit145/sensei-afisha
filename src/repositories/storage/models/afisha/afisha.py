@@ -15,7 +15,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.domain.afisha import AfishaStatus
 
 from ..base import Base
-from ..user.association import afisha_participation
+from ..user.association import user_afisha_follows
 from .association import afisha_venues
 
 if TYPE_CHECKING:
@@ -99,7 +99,7 @@ class AfishaModel(Base):
         back_populates="afisha",
     )
 
-    participants: Mapped[list["UserModel"]] = relationship(
-        secondary=afisha_participation,
-        back_populates="afishas",
+    followers: Mapped[list["UserModel"]] = relationship(
+        secondary=user_afisha_follows,
+        back_populates="followed_afishas",
     )

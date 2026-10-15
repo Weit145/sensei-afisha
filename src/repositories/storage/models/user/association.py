@@ -2,8 +2,8 @@ from sqlalchemy import Column, ForeignKey, Table, Uuid
 
 from ..base import Base
 
-afisha_participation= Table(
-    "afisha_participation",
+user_afisha_follows = Table(
+    "user_afisha_follows",
     Base.metadata,
     Column(
         "user_id",
