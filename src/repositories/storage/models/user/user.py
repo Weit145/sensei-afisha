@@ -1,19 +1,19 @@
-import uuid
 from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, String
-from sqlalchemy.dialects.postgresql import UUID as PG_UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .base import Base
+if TYPE_CHECKING:
+    from ..afisha import AfishaModel
+
+from ..base import Base
+from .association import afisha_participation
 
 
 class UserModel(Base):
     __tablename__ = "users"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
     username: Mapped[str] = mapped_column(String(30), unique=True, index=True)
     role: Mapped[str] = mapped_column(String(10))
     hashed_password: Mapped[str | None] = mapped_column(String(255), nullable=True)
@@ -21,4 +21,8 @@ class UserModel(Base):
         DateTime(timezone=True),
         nullable=False,
         default=lambda: datetime.now(UTC),
+    )
+    afishas: Mapped[list["AfishaModel"]] = relationship(
+        secondary=afisha_participation,
+        back_populates="participants",
     )

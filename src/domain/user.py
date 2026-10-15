@@ -1,4 +1,5 @@
-from dataclasses import dataclass
+import uuid
+from dataclasses import dataclass, field
 from enum import StrEnum
 
 from src.domain.base import Entity
@@ -14,6 +15,8 @@ class User(Entity):
     username: str
     role: UserRole = UserRole.USER
     hashed_password: str | None = None
+
+    afishas_ids: list[uuid.UUID] = field(default_factory=list)
 
     def is_admin(self) -> bool:
         return self.role is UserRole.ADMIN

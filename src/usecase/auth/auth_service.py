@@ -17,7 +17,10 @@ class AuthService:
         self.repo = repo
 
     async def create_user(
-        self, username: str, password: str, session: AsyncSession
+        self,
+        username: str,
+        password: str,
+        session: AsyncSession
     ) -> User:
         username = username.strip().lower()
         try:
@@ -41,6 +44,19 @@ class AuthService:
         except Exception:
             await session.rollback()
             raise
+
+    # async def get_by_username(
+    #     self,
+    #     username: str,
+    #     session: AsyncSession,
+    # ) -> User | None:
+    #     username=username.strip().lower()
+    #     try:
+    #         result = await self.repo.get_by_username(session, username)
+    #         if result is None:
+    #             return None
+
+    #         return result
 
 
 auth_service = AuthService(SQLAlchemyUserRepository())
