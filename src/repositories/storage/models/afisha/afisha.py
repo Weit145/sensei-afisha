@@ -91,8 +91,8 @@ class AfishaModel(Base):
         cascade="all, delete-orphan",
     )
     
-    reviews: Mapped[list["ReviewsModel"]] = relationship(
-        "AfishaModel",
-        back_populates="reviews",
+    afisha_reviews: Mapped[list["Afisha_reviewsModel"]] = relationship(
+        "Afisha_reviewsModel",
+        back_populates="afisha",
         passive_delete=True
     )
