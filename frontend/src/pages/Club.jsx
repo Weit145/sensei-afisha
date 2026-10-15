@@ -1,0 +1,7 @@
+import { useEffect } from 'react';
+import { Icon, Link } from '../components.jsx';
+
+export default function Club({ openAuth }) {
+  useEffect(() => { document.title = 'О клубе — Музыкальный понедельник'; }, []);
+  return <div className="club-page container"><Link to="/" className="back-link"><Icon name="back" size={16} />К афише</Link><div className="club-intro"><div className="eyebrow">КЛУБ СЛУШАТЕЛЕЙ · ГЕОРГИЕВСКИЙ ЗАЛ</div><h1>Концерт — это начало<br /><em>разговора.</em></h1><p>«Музыкальные понедельники» собирают нас в Георгиевском зале. Этот клуб — возможность оставаться рядом и за его пределами.</p></div><div className="club-values">{[['01', 'Выбирайте своё.', 'Следите за афишей, знакомьтесь с программой и сохраняйте концерты в личные планы.'], ['02', 'Приходите вместе.', 'Напишите в обсуждении концерта. Возможно, ваше соседнее кресло уже кто-то ищет.'], ['03', 'Продолжайте разговор.', 'Делитесь впечатлениями и открытиями. У хорошей музыки всегда есть послевкусие.']].map(([number, title, text]) => <section key={number}><span>{number}</span><h2>{title}</h2><p>{text}</p></section>)}</div><div className="club-invitation"><span aria-hidden="true">♪</span><h2>Ваше место — среди своих.</h2><p>Ни специальной подготовки, ни правильных ответов.<br />Только любопытство и любовь к музыке.</p><button className="button" onClick={openAuth}>Присоединиться к клубу<Icon name="arrow" /></button></div></div>;
+}
