@@ -17,7 +17,7 @@ from src.transport.api.v1.middleware.user_check import CurrentUser, require_admi
 from src.transport.api.v1.schemas.afisha import UploadedImageResponse
 from src.usecase.afisha.img_service import img_service
 
-router = APIRouter(prefix="/afisha", tags=["Afisha"])
+router = APIRouter(prefix="/afisha", tags=["Images"])
 
 @router.post("/{afisha_id}/images", status_code=status.HTTP_201_CREATED)
 async def add_images(
