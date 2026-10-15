@@ -62,6 +62,7 @@ class AfishaService:
             await session.commit()
             return result
         except Exception:
+            logger.exception("Не удалось создать афишу")
             await session.rollback()
             for file_name in file_names:
                 try:
@@ -79,7 +80,9 @@ class AfishaService:
         db_afisha = map_to_model(afisha)
         db_afisha.id = afisha_id
         try:
-            db_result = await self.afish_repo.update_afisha(session, db_afisha, afisha_id)
+            db_result = await self.afish_repo.update_afisha(
+                session, db_afisha, afisha.venue_ids
+            )
             db_images = await self.img_repo.list_img_by_afisha_id(session, afisha_id)
             result = self._stub_detail(map_to_domain(db_result))
             result.images = [
@@ -89,6 +92,7 @@ class AfishaService:
             await session.commit()
             return result
         except Exception:
+            logger.exception("Не удалось обновит афишу")
             await session.rollback()
             raise
 
@@ -109,6 +113,7 @@ class AfishaService:
             await session.commit()
             return result
         except Exception:
+            logger.exception("Не удалось частично обновить афишу")
             await session.rollback()
             raise
 
@@ -122,6 +127,7 @@ class AfishaService:
             await self.afish_repo.delete_afisha(session, afisha_id)
             await session.commit()
         except Exception:
+            logger.exception("Не удалось удалить афишу в бд")
             await session.rollback()
             raise
 
@@ -138,6 +144,9 @@ class AfishaService:
         page_size: int = 20,
         search: str | None = None,
     ) -> AfishaListResult:
+        page = max(1, page)
+        page_size = max(1, page_size)
+
         db_afishas, total = await self.afish_repo.list_afisha(
             session, page, page_size, search
         )
@@ -167,7 +176,6 @@ class AfishaService:
     def _stub_detail(afisha: Afisha) -> AfishaDetailResult:
         return AfishaDetailResult(
             afisha=afisha,
-            reviews_id=uuid.uuid4(), # Заглушка пока нет id
             created_at=afisha.created_at,
             updated_at=afisha.updated_at,
         )

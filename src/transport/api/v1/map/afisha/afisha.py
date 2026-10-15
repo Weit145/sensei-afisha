@@ -48,7 +48,6 @@ def map_to_response(
         age_limit=afisha.age_limit,
         status=ResponseAfishaStatus(afisha.status.value),
         images=map_list_dto_to_response_img(result),
-        reviews_id=result.reviews_id,
         created_at=result.created_at,
         updated_at=result.updated_at,
     )

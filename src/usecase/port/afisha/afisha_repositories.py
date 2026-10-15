@@ -19,8 +19,8 @@ class AfishaRepository(Protocol):
     async def update_afisha(
         self,
         session: AsyncSession,
-        afisha:AfishaModel,
-        afisha_id: uuid.UUID,
+        afisha: AfishaModel,
+        venues: list[uuid.UUID],
     )->AfishaModel:
         ...
 

@@ -31,7 +31,6 @@ class AfishaImageItem:
 @dataclass
 class AfishaDetailResult:
     afisha: Afisha
-    reviews_id: uuid.UUID
     created_at: datetime
     updated_at: datetime
     images: list[AfishaImageItem] = field(default_factory=list)

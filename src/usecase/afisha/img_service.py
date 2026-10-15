@@ -4,6 +4,7 @@ import uuid
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.domain.err import NotFoundError
 from src.infrastructure.img import ImgInfastructure as ImgInfastructureMain
 from src.repositories.storage.map.afisha import (
     map_to_image_item,
@@ -57,7 +58,7 @@ class ImgService:
         try:
             db_image = await self.repo.img_by_afish_img_id(session, afisha_id,image_id)
             if db_image is None:
-                raise LookupError("Изображение афиши не найдено")
+                raise NotFoundError("Изображение афиши не найдено")
             await self.repo.delete_img(session, afisha_id, image_id)
             if db_image.is_cover:
                 db_images = await self.repo.list_img_by_afisha_id(session, afisha_id)

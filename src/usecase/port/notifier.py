@@ -2,8 +2,6 @@ from typing import Protocol
 
 from fastapi import WebSocket
 
-from src.domain.notification import Notification
-
 
 class Notifier(Protocol):
     async def Connect(self, ws: WebSocket, user_ip: str,)->bool:...

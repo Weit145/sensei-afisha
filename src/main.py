@@ -30,7 +30,7 @@ async def lifespan(_app: FastAPI):
 
 app = FastAPI(
     lifespan=lifespan,
-    title="Template Monolit",
+    title="Sensei Afisha",
 )
 
 app.include_router(afisha, prefix="/api")

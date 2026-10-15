@@ -9,6 +9,7 @@ from fastapi import UploadFile
 from starlette.concurrency import run_in_threadpool
 
 from src.core.config import settings
+from src.domain.err import InvalidDataError
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +32,7 @@ class ImgInfastructure:
         if header.startswith(b"RIFF") and header[8:12] == b"WEBP":
             return ".webp"
 
-        raise ValueError("Поддерживаются только JPEG, PNG, GIF и WebP")
+        raise InvalidDataError("Поддерживаются только JPEG, PNG, GIF и WebP")
 
     @staticmethod
     def _write_image(source: BinaryIO, path: Path) -> None:
@@ -65,6 +66,6 @@ class ImgInfastructure:
 
     async def delete_image(self, file_name: str) -> None:
         if re.fullmatch(r"[0-9a-f]{32}\.(?:jpg|png|gif|webp)", file_name) is None:
-            raise ValueError("Некорректное имя файла")
+            raise InvalidDataError("Некорректное имя файла")
         path = self.upload_dir / file_name
         await run_in_threadpool(path.unlink, missing_ok=True)
