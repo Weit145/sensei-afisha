@@ -1,0 +1,16 @@
+from dataclasses import dataclass, field
+from enum import Enum
+
+
+# нужно для задания типа сообщения
+class NotificationType(Enum):
+    MAIN_MENU = 1
+    DISCUSSION = 2
+    FEEDBACK = 3
+
+
+# содержит в себе тип сообщения и его текст
+@dataclass(slots=True)
+class Notification:
+    n_type: NotificationType = field(default=NotificationType.MAIN_MENU)
+    content: str = field(default="")

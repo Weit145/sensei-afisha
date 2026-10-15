@@ -1,0 +1,26 @@
+from redis.asyncio import Redis
+
+from src.repositories.storage.models.connectioninfo import (
+    ConnectionInfo,
+    NotificationType,
+)
+
+from src.repositories.storage.redis.db_helper import redis_helper
+
+
+class RedisNotificationRepository:
+    async def Connect(self, ws: WebSocket, user_ip: str,)->bool:...
+
+    async def Disconnect(self, user_ip: str)->bool:...
+
+    async def CheckNotificationConnection(self, user_ip: str)->bool:...
+        
+    async def SwitchAfisha(self, user_ip: str, afisha_id: int) -> None:...
+        
+    async def Subscribe(self, user_ip: str, afisha_id: int) -> None:...
+
+    async def SendAboutNewEvents(self, user_ip: str, notification: Notification) -> None:...
+
+    async def SendAboutNewDescussionMessages(self, afisha_id: int, notification: Notification) -> None:...
+
+    async def SendAboutNewFeedBack( self, afisha_id: int, notification: Notification) -> None:...

@@ -13,6 +13,11 @@ class Settings(BaseSettings):
         "postgresql+asyncpg://postgres:postgres@localhost:5432/postgres",
         validation_alias="DATABASE_URL",
     )
+
+    redis_url: str = Field(
+        "redis://localhost:6379/0",
+        validation_alias="REDIS_URL",
+    )
     log_level: str = Field(
         "INFO",
         validation_alias="LOG_LEVEL",
