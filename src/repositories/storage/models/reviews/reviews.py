@@ -1,36 +1,50 @@
+import uuid
+from datetime import datetime
+
 from sqlalchemy import (
     CheckConstraint,
     DateTime,
-    Enum,
+    ForeignKey,
     Integer,
-    String,
     Text,
+    UniqueConstraint,
+    Uuid,
     func,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-import uuid
+
 from ..base import Base
 
 
 class ReviewsModel(Base):
     __tablename__ = "reviews"
 
-    __table_args__ = CheckConstraint("rating BETWEEN 1 AND 5"),
-    UniqueConstraint("author_id", "afisha_id", name="uq_reviews_author_afisha")
-
-    afisha_id: Mapped[uuid.UUID] = mapped_column(
+    __table_args__ = (
+    CheckConstraint(
+        "rating BETWEEN 1 AND 5",
+        name="ck_reviews_rating",
+    ),
+    UniqueConstraint(
+        "author_id",
+        "afisha_reviews_id",
+        name="uq_reviews_author_afisha_reviews",
+    ),
+    )
+    
+    afisha_reviews_id: Mapped[uuid.UUID] = mapped_column(
         Uuid(as_uuid=True),
-        ForeignKey("afisha.id", ondelete="CASCADE"),
+        ForeignKey("afisha_reviews.id", ondelete="CASCADE"),
         nullable=False,)
 
-    afisha: Mapped["AfishaModel"] = relationship(
-        "AfishaModel",
-        back_populates="reviews",
-    )
+    afisha_reviews: Mapped["AfishaReviewsModel"] = relationship(
+    "AfishaReviewsModel",
+    back_populates="reviews",
+)
 
-    author_id: Mapped[uuid.UUID] = mapped_column(
+    author_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid(as_uuid=True),
-        ForeignKey("users.id", ondelete="SET NULL"),)
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable = True)
 
     author: Mapped["UserModel | None"] = relationship(
         "UserModel",
