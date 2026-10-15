@@ -1,4 +1,4 @@
-__all__ = ("User","Notification")
+__all__ = ("Notification", "User")
 
-from .user import User
 from .notification import Notification
+from .user import User

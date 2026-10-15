@@ -2,7 +2,7 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from src.domain.afisha.afisha import Afisha
+from src.domain.afisha import Afisha
 
 
 @dataclass
@@ -31,8 +31,6 @@ class AfishaImageItem:
 @dataclass
 class AfishaDetailResult:
     afisha: Afisha
-    reviews_id: uuid.UUID
-    average_id: uuid.UUID
     created_at: datetime
     updated_at: datetime
     images: list[AfishaImageItem] = field(default_factory=list)

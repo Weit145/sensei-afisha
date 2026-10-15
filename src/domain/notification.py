@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-
 from enum import Enum
 
 
@@ -11,7 +10,6 @@ class NotificationType(Enum):
 
 # содержит в себе тип сообщения и его текст
 @dataclass(slots=True)
-class Notification(Protocol):
-    n_type: NotificationType = field(default=Notification.MAIN_MENU)
-    content: str = field(default="") 
-
+class Notification:
+    n_type: NotificationType = field(default=NotificationType.MAIN_MENU)
+    content: str = field(default="")

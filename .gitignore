@@ -222,3 +222,11 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+.DS_Store
+
+# Frontend
+node_modules/
+.pnpm-store/
+frontend/dist/
+frontend/.env.local
+.sites-runtime/

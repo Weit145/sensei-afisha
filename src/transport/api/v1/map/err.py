@@ -12,7 +12,10 @@ from src.domain.err import (
 
 def map_error_to_http_status_code(error: Exception) -> NoReturn:
     if isinstance(error, InvalidDataError):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"error": {"code": error.code.value, "message": error.message}},
+        ) from error
     elif isinstance(error, InternalError):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
     elif isinstance(error, (NotFoundError, UnauthorizedError)):

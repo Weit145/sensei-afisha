@@ -58,8 +58,6 @@ class UpdateAfisha(BaseModel):
 class ResponseAfisha(Afisha):
     id: uuid.UUID = Field( ..., description="Id афиши")
     images: list[AfishaImageResponse] = Field(default_factory=list, description="Изображения")
-    reviews_id: uuid.UUID = Field( ..., description="Id обсуждения")
-    average_id: uuid.UUID = Field( ..., description="Id отзывов")
     created_at: datetime = Field( ..., description="Дата начала")
     updated_at: datetime = Field( ..., description="Дата обновления")
     model_config = ConfigDict(from_attributes=True)

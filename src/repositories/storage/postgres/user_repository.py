@@ -1,14 +1,18 @@
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.domain.user import User
-from src.repositories.storage.map.user import map_to_domain, map_to_model
+from src.repositories.storage.models.user import UserModel
 
 
 class SQLAlchemyUserRepository:
-    async def create_user(self, user: User, session: AsyncSession) -> User:
-        model = map_to_model(user)
-        session.add(model)
-        return map_to_domain(model)
+    async def get_by_username(
+        self, session: AsyncSession, username: str
+    ) -> UserModel | None:
+        return await session.scalar(
+            select(UserModel).where(UserModel.username == username)
+        )
 
-    async def commit(self, session: AsyncSession) ->None:
-        await session.commit()
+    async def create_user(self, session: AsyncSession, user: UserModel) -> UserModel:
+        session.add(user)
+        await session.flush()
+        return user
