@@ -9,8 +9,10 @@ class NotificationType(Enum):
     DISCUSSION = 2
     FEEDBACK = 3
 
+MAIN_MENU_ID = -1
 @dataclass
 class ConnectionInfo():
     user_ip : str
     server_id : int 
     n_type: NotificationType 
+    afisha_id: int = MAIN_MENU_ID
