@@ -12,12 +12,13 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.domain.afisha.afisha import AfishaStatus
+from src.domain.afisha import AfishaStatus
 
 from ..base import Base
 from .association import afisha_venues
 
 if TYPE_CHECKING:
+    from ..discussion.message import MessageModel
     from .img import AfishaImageModel
     from .venue import VenueModel
 
@@ -40,9 +41,9 @@ class AfishaModel(Base):
         String(255),
         nullable=False,
     )
-    description: Mapped[str] = mapped_column(
+    description: Mapped[str | None] = mapped_column(
         Text,
-        nullable=False,
+        nullable=True,
     )
     short_description: Mapped[str | None] = mapped_column(
         String(500),
@@ -89,4 +90,8 @@ class AfishaModel(Base):
     images: Mapped[list["AfishaImageModel"]] = relationship(
         back_populates="afisha",
         cascade="all, delete-orphan",
+    )
+
+    messages: Mapped[list["MessageModel"]] = relationship(
+        back_populates="afisha",
     )

@@ -1,13 +1,17 @@
 import logging
-from src.domain.notification import Notification
-from src.repositories.storage.redis.notification_repository import RedisNotificationRepository, redis_notification_repository
-from src.repositories.storage.models.connectioninfo import (
-    ConnectionInfo,
-    NotificationType,
-    MAIN_MENU_ID,
-)
 
 from fastapi import WebSocket
+
+from src.domain.notification import Notification
+from src.repositories.storage.models.connectioninfo import (
+    MAIN_MENU_ID,
+    ConnectionInfo,
+    NotificationType,
+)
+from src.repositories.storage.redis.notification_repository import (
+    RedisNotificationRepository,
+    redis_notification_repository,
+)
 
 logger = logging.getLogger("NotificaionService")
 

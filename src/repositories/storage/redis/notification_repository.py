@@ -1,11 +1,5 @@
-from redis.asyncio import Redis
 
-from src.repositories.storage.models.connectioninfo import (
-    ConnectionInfo,
-    NotificationType,
-)
 
-from src.repositories.storage.redis.db_helper import redis_helper
 
 
 class RedisNotificationRepository:

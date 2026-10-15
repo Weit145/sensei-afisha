@@ -1,7 +1,9 @@
 from typing import Protocol
+
 from fastapi import WebSocket
 
 from src.domain.notification import Notification
+
 
 class Notifier(Protocol):
     async def SendAboutNewEvents(self, user_ip: str,  notification: Notification)->None: ...

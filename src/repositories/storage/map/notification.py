@@ -1,5 +1,6 @@
 from src.repositories.storage.models import ConnectionInfo, NotificationType
 
+
 def model_to_map(info: ConnectionInfo)->map:
     print("dd")
 
