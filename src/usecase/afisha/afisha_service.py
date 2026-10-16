@@ -23,8 +23,11 @@ from src.repositories.storage.postgres.afisha import (
     SQLAlchemyAfishaRepository,
     SQLAlchemyImgRepository,
 )
+from src.repositories.storage.postgres.reviews_repository import AfishaReviewsRepository
 from src.usecase.afisha.dto import AfishaDetailResult, AfishaListResult
 from src.usecase.port.afisha import AfishaRepository, ImgInfastructure, ImgRepository
+from src.usecase.port.notifier import Notifier
+from src.usecase.notification_service import NotificationService, notification_service
 
 logger = logging.getLogger(__name__)
 
@@ -35,10 +38,12 @@ class AfishaService:
         afish_repo: AfishaRepository,
         img_repo: ImgRepository,
         img_inf: ImgInfastructure,
+        event: NotificationService,
     ) -> None:
         self.afish_repo = afish_repo
         self.img_repo = img_repo
         self.img_inf = img_inf
+        self.event = event
 
     async def create_afisha(
         self,
@@ -60,7 +65,6 @@ class AfishaService:
                 for db_image in db_images
             ]
             await session.commit()
-            return result
         except Exception:
             logger.exception("Не удалось создать афишу")
             await session.rollback()
@@ -70,6 +74,8 @@ class AfishaService:
                 except Exception:
                     logger.exception("Не удалось удалить изображение %s", file_name)
             raise
+        await self.event.SendToMainMenu("Новая афиша")
+        return result
 
     async def update_afisha(
         self,
@@ -85,6 +91,7 @@ class AfishaService:
             )
             db_images = await self.img_repo.list_img_by_afisha_id(session, afisha_id)
             result = self._stub_detail(map_to_domain(db_result))
+            await self._set_review_stats(result, session)
             result.images = [
                 map_to_image_item(db_image)
                 for db_image in sorted(db_images, key=lambda image: image.position)
@@ -106,6 +113,7 @@ class AfishaService:
             db_result = await self.afish_repo.patch_afisha(session, afisha_id, afisha)
             db_images = await self.img_repo.list_img_by_afisha_id(session, afisha_id)
             result = self._stub_detail(map_to_domain(db_result))
+            await self._set_review_stats(result, session)
             result.images = [
                 map_to_image_item(db_image)
                 for db_image in sorted(db_images, key=lambda image: image.position)
@@ -150,8 +158,18 @@ class AfishaService:
         db_afishas, total = await self.afish_repo.list_afisha(
             session, page, page_size, search
         )
+        items = [map_to_list_item(db_afisha) for db_afisha in db_afishas]
+        stats = await AfishaReviewsRepository(session).get_stats_by_afisha_ids(
+            [item.afisha.id for item in items]
+        )
+        stats_by_afisha_id = {item.afisha_id: item for item in stats}
+        for item in items:
+            review_stats = stats_by_afisha_id.get(item.afisha.id)
+            if review_stats is not None:
+                item.rating_sum = review_stats.rating_sum
+                item.reviews_count = review_stats.reviews_count
         return AfishaListResult(
-            items=[map_to_list_item(db_afisha) for db_afisha in db_afishas],
+            items=items,
             total=total,
             page=page,
             page_size=page_size,
@@ -165,11 +183,24 @@ class AfishaService:
         db_afisha = await self.afish_repo.read_afisha(session, afisha_id)
         db_images = await self.img_repo.list_img_by_afisha_id(session, afisha_id)
         result = self._stub_detail(map_to_domain(db_afisha))
+        await self._set_review_stats(result, session)
         result.images = [
             map_to_image_item(db_image)
             for db_image in sorted(db_images, key=lambda image: image.position)
         ]
         return result
+
+    @staticmethod
+    async def _set_review_stats(
+        result: AfishaDetailResult,
+        session: AsyncSession,
+    ) -> None:
+        stats = await AfishaReviewsRepository(session).get_stats_by_afisha_ids(
+            [result.afisha.id]
+        )
+        if stats:
+            result.rating_sum = stats[0].rating_sum
+            result.reviews_count = stats[0].reviews_count
 
 
     @staticmethod
@@ -185,4 +216,5 @@ afisha_service = AfishaService(
     afish_repo=SQLAlchemyAfishaRepository(),
     img_repo=SQLAlchemyImgRepository(),
     img_inf=ImgInfastructureMain(),
+    event=notification_service,
 )
