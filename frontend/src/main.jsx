@@ -76,7 +76,7 @@ function App() {
       {detail
         ? <Concert key={detail[1]} id={detail[1]} session={session} openAuth={openAuth} notify={notify} />
         : path === '/'
-          ? <Home />
+          ? <Home openAuth={openAuth} />
           : <div className="container not-found"><span className="eyebrow">404</span><h1>Страница не найдена</h1><Link to="/" className="button">Вернуться к афише<Icon name="arrow" /></Link></div>}
     </main>
     <footer className="site-footer container"><Link to="/">Музыкальный понедельник</Link><span>Клуб слушателей · Георгиевский зал</span></footer>

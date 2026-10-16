@@ -1,0 +1,143 @@
+/* Keep the original home-page composition separate from concert-page styles. */
+.home-page .hero {
+  margin-top: 32px;
+  min-height: 444px;
+  display: grid;
+  grid-template-columns: 1.13fr 1fr;
+  background: var(--wine);
+  color: #f3e9d9;
+  overflow: hidden;
+  position: relative;
+}
+.home-page .hero-copy { padding: 45px 0 34px 47px; position: relative; z-index: 1; }
+.home-page .hero .eyebrow { font-size: 9px; color: #e3bd9a; display: flex; align-items: center; gap: 10px; letter-spacing: 1.35px; }
+.home-page .tiny-star { font-size: 20px; line-height: 1; }
+.home-page .hero h1 { font: normal clamp(45px, 4.8vw, 67px)/1.06 var(--serif); letter-spacing: -2px; margin: 27px 0 22px; }
+.home-page .hero h1 em { font-weight: normal; color: #e4b57c; }
+.home-page .hero-copy > p { font-size: 13px; line-height: 1.8; color: #e3cdd0; }
+.home-page .hero-cta { font-size: 12px; display: inline-flex; align-items: center; justify-content: space-between; gap: 38px; border-bottom: 1px solid #bb8b8f; padding: 17px 0 12px; margin-top: 12px; }
+.home-page .hero-cta:hover { color: #e4b57c; }
+.home-page .hero-edition { font-size: 8px; letter-spacing: 1.35px; display: block; margin-top: 27px; color: #bc9096; }
+.home-page .hero-art { position: relative; align-self: stretch; display: flex; align-items: center; justify-content: center; color: #e2bf91; }
+.home-page .hero-art > svg { width: 100%; height: auto; max-height: 415px; margin-top: -10px; }
+.home-page .hero-art-caption { position: absolute; bottom: 27px; left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: 8px; letter-spacing: 1.4px; color: #d3ab9c; }
+.home-page .under-hero { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); padding: 21px 0; font-size: 11px; color: var(--muted); gap: 20px; }
+.home-page .under-hero > a { display: flex; align-items: center; gap: 13px; white-space: nowrap; }
+.home-page .under-hero strong { color: var(--wine); font-weight: 500; }
+.home-page .under-hero-note { font: italic 15px var(--serif); color: var(--wine); }
+.home-page .afisha-page { padding-block: 58px 62px; min-height: 0; }
+.home-page .section-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 27px; }
+.home-page .section-heading .eyebrow { font-size: 9px; color: var(--muted); letter-spacing: 1.4px; margin-bottom: 10px; }
+.home-page .section-heading h2 { font: normal 43px/1.2 var(--serif); letter-spacing: -1.1px; }
+.home-page .section-heading h2 span { color: var(--wine); }
+.home-page .section-aside { font: italic 14px var(--serif); color: var(--muted); padding-bottom: 6px; }
+.home-page .afisha-divider { display: flex; align-items: center; justify-content: space-between; gap: 20px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 17px 0; font-size: 11px; color: var(--muted); }
+.home-page .afisha-divider > span:first-child { background: var(--wine); color: #fff7eb; padding: 9px 13px; }
+.home-page .poster-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 37px 27px; padding-top: 24px; }
+.home-page .poster { aspect-ratio: 1.24; }
+.home-page .poster img { object-fit: cover; }
+.home-page .poster-fallback { padding: 22px; }
+.home-page .poster-label { font-size: 7px; letter-spacing: 1px; line-height: 1.5; }
+.home-page .poster-art { left: 8%; top: 11%; height: 80%; width: 84%; }
+.home-page .poster-caption > strong { display: none; }
+.home-page .poster-caption > span { font: normal 20px var(--serif); margin: 0; }
+.home-page .poster-open { right: 17px; bottom: 17px; width: 38px; height: 38px; padding: 0; justify-content: center; }
+.home-page .poster-open > span { display: none; }
+.home-page .card-meta { margin-top: 17px; font-size: 10px; gap: 5px; }
+.home-page .age-limit { font-size: 9px; padding: 3px 4px; }
+.home-page .concert-card h3 { font: normal 25px/1.18 var(--serif); letter-spacing: -.45px; margin: 11px 0 9px; }
+.home-page .concert-card h3 a:hover { color: var(--wine); }
+.home-page .card-description { font-size: 11px; line-height: 1.7; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 37px; margin-bottom: 14px; }
+.home-page .card-bottom { font-size: 10px; padding-top: 12px; gap: 10px; }
+.home-page .card-venue { gap: 6px; line-height: 1.5; }
+.home-page .card-venue > svg { width: 15px; }
+.home-page .card-rating, .home-page .card-past { font-size: 10px; }
+.home-page .club-strip { display: flex; align-items: center; padding: 37px 34px; gap: 29px; background: #ebe8dd; border: 1px solid #e4dfd2; margin-bottom: 64px; }
+.home-page .club-strip-symbol { font: italic 100px/.9 var(--serif); color: var(--wine); width: 85px; flex-shrink: 0; }
+.home-page .club-strip .eyebrow { font-size: 8px; letter-spacing: 1.1px; color: #837969; margin-bottom: 8px; }
+.home-page .club-strip h2 { font: normal 30px/1.2 var(--serif); letter-spacing: -.6px; }
+.home-page .club-strip p { font-size: 11px; line-height: 1.8; color: #787267; margin-top: 10px; }
+.home-page .club-strip .button { margin-left: auto; white-space: nowrap; font-size: 11px; }
+
+@media (max-width: 1100px) {
+  .home-page .hero-copy { padding-left: 32px; }
+  .home-page .hero h1 { font-size: 55px; }
+  .home-page .hero .eyebrow { font-size: 8px; }
+  .home-page .hero { min-height: 420px; }
+  .home-page .hero-art > svg { width: 110%; max-width: none; }
+  .home-page .hero-art-caption { font-size: 6px; }
+  .home-page .poster-grid { gap: 30px 22px; }
+  .home-page .poster-fallback { padding: 17px; }
+  .home-page .poster-label { font-size: 6px; }
+  .home-page .concert-card h3 { font-size: 23px; }
+  .home-page .club-strip { gap: 20px; padding: 30px 24px; }
+  .home-page .club-strip-symbol { width: 62px; font-size: 80px; }
+  .home-page .club-strip h2 { font-size: 26px; }
+}
+@media (max-width: 800px) {
+  .home-page .hero { margin-top: 24px; min-height: 373px; grid-template-columns: 1.18fr 1fr; }
+  .home-page .hero-copy { padding: 32px 0 24px 28px; }
+  .home-page .hero .eyebrow { font-size: 7px; letter-spacing: 1px; }
+  .home-page .tiny-star { font-size: 15px; }
+  .home-page .hero h1 { font-size: 45px; letter-spacing: -1.4px; margin-top: 24px; }
+  .home-page .hero-copy > p { font-size: 11px; }
+  .home-page .hero-cta { font-size: 11px; margin-top: 8px; gap: 28px; padding-bottom: 10px; }
+  .home-page .hero-edition { font-size: 6px; margin-top: 19px; }
+  .home-page .hero-art > svg { width: 120%; position: relative; right: -10px; }
+  .home-page .hero-art-caption { font-size: 5px; letter-spacing: .8px; bottom: 28px; }
+  .home-page .under-hero { font-size: 9px; padding: 17px 0; }
+  .home-page .under-hero > a { gap: 8px; }
+  .home-page .afisha-page { padding-block: 43px 44px; }
+  .home-page .section-heading h2 { font-size: 37px; }
+  .home-page .section-aside { font-size: 12px; }
+  .home-page .poster-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px 24px; }
+  .home-page .club-strip { flex-wrap: wrap; margin-bottom: 42px; }
+  .home-page .club-strip > div { flex: 1; }
+  .home-page .club-strip .button { margin-left: 83px; }
+}
+@media (max-width: 640px) {
+  .home-page .hero { grid-template-columns: 1fr; min-height: auto; margin-top: 20px; }
+  .home-page .hero-copy { padding: 27px 25px 30px; }
+  .home-page .hero h1 { font-size: clamp(32px, 9.8vw, 42px); line-height: 1.08; margin: 24px 0 20px; max-width: 380px; }
+  .home-page .hero h1 em { white-space: nowrap; }
+  .home-page .hero-copy > p { font-size: 12px; }
+  .home-page .hero-cta { font-size: 11px; margin-top: 15px; gap: 54px; }
+  .home-page .hero-edition { font-size: 6px; margin-top: 27px; }
+  .home-page .hero-art { position: absolute; width: 230px; right: -70px; bottom: -16px; opacity: .22; pointer-events: none; }
+  .home-page .hero-art > svg { position: static; width: 100%; }
+  .home-page .hero-art-caption { display: none; }
+  .home-page .under-hero { align-items: flex-start; gap: 12px; line-height: 1.7; }
+  .home-page .under-hero > span:first-child { max-width: 205px; }
+  .home-page .under-hero > a { flex-wrap: wrap; gap: 0 7px; justify-content: flex-end; }
+  .home-page .under-hero > a > span { width: 100%; text-align: right; font-size: 8px; }
+  .home-page .under-hero strong { font-size: 10px; }
+  .home-page .under-hero-note { font-size: 13px; }
+  .home-page .afisha-page { padding-block: 36px 37px; }
+  .home-page .section-heading { align-items: flex-start; margin-bottom: 22px; }
+  .home-page .section-heading .eyebrow { font-size: 7px; letter-spacing: 1.3px; margin-bottom: 8px; }
+  .home-page .section-heading h2 { font-size: 34px; }
+  .home-page .section-aside { display: none; }
+  .home-page .afisha-divider { font-size: 9px; padding-block: 13px; }
+  .home-page .poster-grid { gap: 29px 16px; padding-top: 20px; }
+  .home-page .poster { aspect-ratio: .9; }
+  .home-page .poster-fallback { padding: 12px; }
+  .home-page .poster-label { font-size: 5px; letter-spacing: .6px; }
+  .home-page .poster-art { top: 14%; height: 74%; width: 100%; left: 0; }
+  .home-page .poster-caption > span { font-size: 13px; }
+  .home-page .card-meta { margin-top: 13px; gap: 4px; font-size: 8px; }
+  .home-page .age-limit { font-size: 7px; padding: 2px; }
+  .home-page .dot { margin-inline: 4px; width: 2px; height: 2px; }
+  .home-page .concert-card h3 { font-size: 21px; margin-block: 10px 8px; line-height: 1.15; }
+  .home-page .card-description { font-size: 10px; line-height: 1.7; min-height: 34px; }
+  .home-page .card-bottom { gap: 5px; padding-top: 8px; font-size: 8px; }
+  .home-page .card-venue { max-width: none; gap: 4px; }
+  .home-page .card-venue > svg { width: 12px; }
+  .home-page .card-rating, .home-page .card-past { font-size: 8px; }
+  .home-page .club-strip { padding: 25px 20px; gap: 15px; }
+  .home-page .club-strip-symbol { width: 40px; font-size: 65px; align-self: flex-start; margin-top: 10px; }
+  .home-page .club-strip h2 { font-size: 25px; }
+  .home-page .club-strip .eyebrow { font-size: 6px; letter-spacing: .7px; }
+  .home-page .club-strip p { font-size: 10px; margin-top: 9px; }
+  .home-page .club-strip .button { margin-left: 55px; font-size: 10px; padding: 12px 14px; }
+  .home-page .desktop-break { display: none; }
+}
