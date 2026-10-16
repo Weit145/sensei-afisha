@@ -1,5 +1,5 @@
 # тут будет инициализация соединения с редис и создание глобального образца
-from redis.asyncio import redis
+import redis.asyncio as redis
 
 from src.core.config import settings
 
