@@ -4,8 +4,13 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.domain.discussion.message import Message
-from src.domain.err import NotFoundError, UnauthorizedError
-from src.usecase.discussion.dto.message import MessageListResult
+from src.domain.err import InvalidDataError, NotFoundError, UnauthorizedError
+from src.usecase.discussion.dto.message import (
+    DEFAULT_MESSAGE_LIMIT,
+    MAX_MESSAGE_LIMIT,
+    MessageCursor,
+    MessageListResult,
+)
 from src.usecase.port.discussion.message_repositories import MessageRepository
 
 
@@ -40,9 +45,32 @@ class MessageService:
         return created
 
     async def list_messages(
-        self, afisha_id: uuid.UUID, session: AsyncSession
+        self,
+        afisha_id: uuid.UUID,
+        session: AsyncSession,
+        *,
+        limit: int = DEFAULT_MESSAGE_LIMIT,
+        before: MessageCursor | None = None,
     ) -> MessageListResult:
+        if not 1 <= limit <= MAX_MESSAGE_LIMIT:
+            raise InvalidDataError(
+                f"Message limit must be between 1 and {MAX_MESSAGE_LIMIT}"
+            )
+        if before is not None and before.afisha_id != afisha_id:
+            raise InvalidDataError("Message cursor belongs to another concert")
         await self._require_afisha(afisha_id, session)
+        # Fetch one extra row to detect an older page without counting the history.
+        messages = await self.repo.list_messages(
+            afisha_id, session, limit=limit + 1, before=before
+        )
+        has_more = len(messages) > limit
+        items = list(reversed(messages[:limit]))
+        next_cursor = None
+        if has_more:
+            oldest = items[0]
+            next_cursor = MessageCursor(
+                afisha_id=afisha_id, created_at=oldest.created_at, id=oldest.id
+            )
         return MessageListResult(
-            items=await self.repo.list_messages(afisha_id, session)
+            items=items, next_cursor=next_cursor, has_more=has_more
         )

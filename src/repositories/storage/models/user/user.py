@@ -6,6 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 if TYPE_CHECKING:
     from ..afisha import AfishaModel
+    from ..reviews.reviews import ReviewsModel
 
 from ..base import Base
 from .association import user_afisha_follows
@@ -25,4 +26,10 @@ class UserModel(Base):
     followed_afishas: Mapped[list["AfishaModel"]] = relationship(
         secondary=user_afisha_follows,
         back_populates="followers",
+    )
+
+    reviews: Mapped[list["ReviewsModel"]] = relationship(
+        "ReviewsModel",
+        back_populates="author",
+        passive_deletes=True,
     )

@@ -12,7 +12,6 @@ class AfishaStatus(StrEnum):
 
 class AfishaImageResponse(BaseModel):
     id: uuid.UUID
-
     image_url: str
     is_cover: bool
     position: int
@@ -58,7 +57,8 @@ class UpdateAfisha(BaseModel):
 class ResponseAfisha(Afisha):
     id: uuid.UUID = Field( ..., description="Id афиши")
     images: list[AfishaImageResponse] = Field(default_factory=list, description="Изображения")
-    reviews_id: uuid.UUID = Field( ..., description="Id отзывов")
+    rating_sum: int = Field( ..., description="Сумма рейтинга")
+    reviews_count: int = Field( ..., description="Колличество рейтинга")
     created_at: datetime = Field( ..., description="Дата начала")
     updated_at: datetime = Field( ..., description="Дата обновления")
     model_config = ConfigDict(from_attributes=True)
@@ -70,6 +70,8 @@ class ResponseShortAfisha(BaseModel):
     short_description: str | None = Field(None,description="Короткое описание")
     starts_at: datetime = Field(...,description="Начало мероприятия")
     ends_at: datetime = Field(...,description="Конец мероприятия")
+    rating_sum: int = Field( ..., description="Сумма рейтинга")
+    reviews_count: int = Field( ..., description="Колличество рейтинга")
     venue_names: list[str] = Field(...,description="Адресса мероприятия")
     cover_url: str | None = Field(None,description="Ссылка на изображение")
     age_limit: int | None = Field(None,ge=0,le=18)

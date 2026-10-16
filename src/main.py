@@ -15,6 +15,7 @@ from .transport.api.v1.handler.afisha.img import router as img
 from .transport.api.v1.handler.afisha.venue import router as venue
 from .transport.api.v1.handler.auth.auth import router as auth
 from .transport.api.v1.handler.discussion.message import router as discussion
+from .transport.api.v1.handler.reviews.reviews import router as reviews
 
 logger = logging.getLogger(__name__)
 setup_logging()
@@ -31,7 +32,7 @@ async def lifespan(_app: FastAPI):
 
 app = FastAPI(
     lifespan=lifespan,
-    title="Template Monolit",
+    title="Sensei Afisha",
 )
 
 app.add_middleware(
@@ -47,6 +48,7 @@ app.include_router(venue, prefix="/api")
 app.include_router(img, prefix="/api")
 app.include_router(discussion, prefix="/api")
 app.include_router(auth, prefix="/api")
+app.include_router(reviews, prefix="/api")
 
 @app.get("/_info", status_code=status.HTTP_200_OK)
 async def info():
