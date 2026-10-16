@@ -15,12 +15,16 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.domain.afisha import AfishaStatus
 
 from ..base import Base
+from ..user.association import user_afisha_follows
 from .association import afisha_venues
 
 if TYPE_CHECKING:
     from ..discussion.message import MessageModel
+    from ..user import UserModel
     from .img import AfishaImageModel
+    from .stats import AfishaStatsModel
     from .venue import VenueModel
+
 
 
 class AfishaModel(Base):
@@ -94,4 +98,15 @@ class AfishaModel(Base):
 
     messages: Mapped[list["MessageModel"]] = relationship(
         back_populates="afisha",
+    )
+
+    followers: Mapped[list["UserModel"]] = relationship(
+        secondary=user_afisha_follows,
+        back_populates="followed_afishas",
+    )
+
+    stats: Mapped["AfishaStatsModel"] = relationship(
+        back_populates="afisha",
+        viewonly=True,
+        lazy="raise"
     )

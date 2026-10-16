@@ -4,6 +4,7 @@ from .afisha import (
     AfishaListItem,
     AfishaListResult,
 )
+from .afisha_stats import AfishaStatsResult
 from .venue import VenueListResult
 
 __all__ = (
@@ -11,5 +12,6 @@ __all__ = (
     "AfishaImageItem",
     "AfishaListItem",
     "AfishaListResult",
+    "AfishaStatsResult",
     "VenueListResult",
 )
