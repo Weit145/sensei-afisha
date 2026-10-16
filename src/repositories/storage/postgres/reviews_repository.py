@@ -19,12 +19,11 @@ class AfishaReviewsRepository:
 
     async def get_stats_by_afisha_ids(
         self,
-        session: AsyncSession,
         afisha_ids: list[uuid.UUID]
     ) -> list[AfishaReviews]:
         if not afisha_ids:
             return []
-        rows = await session.scalars(
+        rows = await self.session.scalars(
             select(AfishaReviewsModel).where(
                 AfishaReviewsModel.afisha_id.in_(afisha_ids)
             )

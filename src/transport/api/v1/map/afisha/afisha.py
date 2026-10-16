@@ -48,6 +48,8 @@ def map_to_response(
         age_limit=afisha.age_limit,
         status=ResponseAfishaStatus(afisha.status.value),
         images=map_list_dto_to_response_img(result),
+        rating_sum = result.rating_sum,
+        reviews_count = result.reviews_count,
         created_at=result.created_at,
         updated_at=result.updated_at,
     )
@@ -103,6 +105,8 @@ def map_list_to_short_afish(
                 short_description=item.afisha.short_description,
                 starts_at=item.afisha.starts_at,
                 ends_at=item.afisha.ends_at,
+                rating_sum = item.rating_sum,
+                reviews_count = item.reviews_count,
                 venue_names=list(item.venue_names),
                 cover_url=(
                     _image_url(item.cover_file_name)
