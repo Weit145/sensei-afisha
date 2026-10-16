@@ -40,15 +40,12 @@ export function writeStored(key, value, storage = 'localStorage') {
   } catch { return false; }
 }
 
-// Decoding supplies a display label only. The server authenticates every POST.
-export function parseAccessKey(token) {
-  try {
-    const parts = token.trim().split('.');
-    if (parts.length !== 3) return null;
-    const raw = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-    const payload = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(raw), c => c.charCodeAt(0))));
-    if (!/^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/i.test(payload.user_id)) return null;
-    if (!['user', 'admin'].includes(payload.role) || !Number.isFinite(payload.exp) || payload.exp * 1000 <= Date.now()) return null;
-    return { token: token.trim(), id: payload.user_id, expiresAt: payload.exp * 1000 };
-  } catch { return null; }
+export const averageRating = stats => stats?.reviews_count > 0 ? (stats.rating_sum / stats.reviews_count).toFixed(1) : null;
+
+export function mergeMessages(previous, incoming) {
+  const byId = new Map(previous.map(message => [message.id, message]));
+  for (const message of incoming) byId.set(message.id, message);
+  return [...byId.values()].sort((a, b) => new Date(a.created_at) - new Date(b.created_at) || a.id.localeCompare(b.id));
 }
+
+export const canCreateReview = (event, now = Date.now()) => event.status === 'published' && new Date(event.ends_at).getTime() <= now;

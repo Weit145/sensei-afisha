@@ -15,6 +15,7 @@ export const demoConcerts = entries.map(([title, short_description, date, descri
   starts_at: `${date}T16:00:00Z`, ends_at: `${date}T17:30:00Z`,
   venue_ids: [venueId], venue_names: ['Георгиевский зал'],
   cover_url: null, images: [], age_limit: 6, status: 'published',
+  rating_sum: 0, reviews_count: 0, followers_count: 0,
   created_at: '2026-10-01T10:00:00Z', updated_at: '2026-10-01T10:01:00Z',
 }));
 
@@ -32,9 +33,10 @@ export function demoRequest(path, method = 'GET') {
     return structuredClone({ items: demoConcerts.slice((page - 1) * pageSize, page * pageSize), total: demoConcerts.length, page, page_size: pageSize });
   }
   if (url.pathname === `/venues/${venueId}`) return { id: venueId, name: 'Георгиевский зал', city: 'Москва', address: 'Адрес уточняйте у организаторов', latitude: null, longitude: null };
-  const detail = url.pathname.match(/^\/afisha\/([^/]+)(\/messages)?$/);
+  const detail = url.pathname.match(/^\/afisha\/([^/]+)(\/(?:messages|reviews))?$/);
   const event = demoConcerts.find(event => event.id === detail?.[1]);
-  if (event && detail[2]) return { items: sampleMessages.map(([author_id, text, created_at], i) => ({ id: `66666666-6666-4666-8666-${String(i).padStart(12, '0')}`, afisha_id: event.id, author_id, text, created_at })) };
+  if (event && detail[2] === '/reviews') return { stats: { afisha_id: event.id, rating_sum: 0, reviews_count: 0, avg_rating: 0 }, items: [], limit: 100, offset: 0 };
+  if (event && detail[2] === '/messages') return { items: sampleMessages.map(([author_id, text, created_at], i) => ({ id: `66666666-6666-4666-8666-${String(i).padStart(12, '0')}`, afisha_id: event.id, author_id, text, created_at })), has_more: false, next_cursor: null };
   if (event) return structuredClone(event);
   throw new Error('Концерт не найден.');
 }

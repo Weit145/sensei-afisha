@@ -1,78 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api.js';
 import { ErrorState, Icon, Link, Poster } from '../components.jsx';
-import { dateLong, dateShort, hash, initials, isPast, participantName, time, weekday } from '../utils.js';
-
-function Discussion({ id, session, openAuth }) {
-  const [messages, setMessages] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [sending, setSending] = useState(false);
-  const [text, setText] = useState('');
-  const [refresh, setRefresh] = useState(0);
-  const [pollError, setPollError] = useState('');
-  const listRef = useRef(null);
-  const initialScroll = useRef(true);
-  const shouldScroll = useRef(true);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    let timer;
-    let active = true;
-    async function load(initial = false) {
-      if (initial) { setLoading(true); setError(''); }
-      try {
-        const result = await api.messages(id, controller.signal);
-        if (!active) return;
-        const list = listRef.current;
-        shouldScroll.current = initialScroll.current || !list || list.scrollHeight - list.scrollTop - list.clientHeight < 70;
-        setMessages(previous => {
-          const byId = new Map(previous.map(message => [message.id, message]));
-          for (const message of result.items) byId.set(message.id, message);
-          return [...byId.values()].sort((a, b) => new Date(a.created_at) - new Date(b.created_at) || a.id.localeCompare(b.id));
-        });
-        setError(''); setPollError(''); initialScroll.current = false;
-      } catch (error) { if (active) { if (initial) setError(error.message); else setPollError('Обновление приостановлено. Повторим подключение автоматически.'); } }
-      finally {
-        if (active) { setLoading(false); timer = setTimeout(() => { if (!document.hidden) load(); else timer = setTimeout(() => load(), 15000); }, 10000); }
-      }
-    }
-    load(true);
-    return () => { active = false; clearTimeout(timer); controller.abort(); };
-  }, [id, refresh]);
-  useEffect(() => { if (shouldScroll.current && listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight; }, [messages]);
-
-  async function send(event) {
-    event.preventDefault();
-    if (!session || !text.trim() || sending) return;
-    setSending(true); setPollError('');
-    try {
-      const message = await api.sendMessage(id, text.trim(), session.token);
-      shouldScroll.current = true;
-      setMessages(old => [...old.filter(item => item.id !== message.id), message].sort((a, b) => new Date(a.created_at) - new Date(b.created_at) || a.id.localeCompare(b.id)));
-      setText('');
-    } catch (error) { setPollError(error.message); }
-    finally { setSending(false); }
-  }
-
-  return <section className="discussion-panel" aria-labelledby="discussion-heading" id="discussion">
-    <div className="discussion-heading"><div><Icon name="chat" size={22} /><h2 id="discussion-heading">Обсуждение</h2>{!loading && <span className="message-count">{messages.length}</span>}</div><button className="icon-button" onClick={() => setRefresh(value => value + 1)} disabled={loading} aria-label="Обновить обсуждение" title="Обновить"><Icon name="refresh" size={17} /></button></div>
-    <div className="discussion-subtitle">Найдите компанию. Поделитесь ожиданиями.</div>
-    <div className="messages-list" ref={listRef} role="log" aria-label="Сообщения обсуждения" aria-live="polite" aria-relevant="additions text" tabIndex={0}>
-      {loading ? <p className="discussion-loading" role="status">Загружаем разговор…</p> : error ? <ErrorState compact message={error} retry={() => setRefresh(value => value + 1)} /> : !messages.length ? <div className="conversation-empty"><span className="conversation-drawing" aria-hidden="true"><Icon name="chat" size={44} /><span>♪</span></span><h3>Займите первое кресло.</h3><p>Кто идёт на концерт?<br />Самое время познакомиться.</p></div> : messages.map((message, index) => {
-        const own = message.author_id === session?.id;
-        const name = own ? 'Вы' : participantName(message.author_id);
-        const dayChanged = index === 0 || dateLong(message.created_at) !== dateLong(messages[index - 1].created_at);
-        return <div key={message.id}>{dayChanged && <div className="chat-date">{dateShort(message.created_at)}</div>}<article className={`message ${own ? 'own-message' : ''}`}><span className={`avatar avatar-${hash(message.author_id) % 4}`} aria-hidden="true">{own ? 'ВЫ' : initials(name.split(' ')[1])}</span><div className="message-body"><div className="message-meta"><strong>{name}</strong><time dateTime={message.created_at}>{time(message.created_at)}</time></div><p>{message.text}</p></div></article></div>;
-      })}
-    </div>
-    <form className="message-form" onSubmit={send}>
-      {pollError && <p className="form-error" role="alert">{pollError}</p>}
-      <label className="sr-only" htmlFor="new-message">Новое сообщение</label><textarea id="new-message" value={text} onChange={event => setText(event.target.value)} placeholder={session ? 'О чём хочется поговорить?' : 'Присоединитесь к разговору…'} rows={3} maxLength={2000} disabled={!session || sending} onKeyDown={event => { if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) { event.preventDefault(); event.currentTarget.form.requestSubmit(); } }} />
-      <div className="message-form-bottom">{session ? <><span>{text.length}/2000</span><button className="button" disabled={!text.trim() || sending}>{sending ? 'Отправляем…' : 'Отправить'}<Icon name="send" size={16} /></button></> : <><span>Для сообщений нужен вход в клуб</span><button type="button" className="button" onClick={openAuth}>Войти<Icon name="arrow" size={16} /></button></>}</div>
-    </form>
-  </section>;
-}
+import Discussion from '../Discussion.jsx';
+import Reviews from '../Reviews.jsx';
+import { averageRating, dateLong, isPast, time, weekday } from '../utils.js';
 
 export default function Concert({ id, plans, togglePlan, session, openAuth, notify }) {
   const [concert, setConcert] = useState(null);
@@ -119,11 +50,12 @@ export default function Concert({ id, plans, togglePlan, session, openAuth, noti
         {cancelled && <div className="notice cancelled-notice">Концерт отменён. Обсуждение остаётся открытым.</div>}
         {!cancelled && past && <div className="notice">Этот концерт уже прошёл. Обсудите его с другими слушателями.</div>}
         <div className="attendance-row"><button className={`button attendance-button ${planned ? 'is-planned' : ''}`} onClick={() => togglePlan(id)} disabled={!planned && (past || cancelled)} aria-pressed={planned}><Icon name={planned ? 'check' : 'heart'} size={19} />{planned ? 'В моих планах' : 'Хочу пойти'}</button><a href="#discussion" className="text-button">Найти компанию<Icon name="arrow" size={17} /></a></div>
+        <p className="concert-statistics">{averageRating(concert) && <span>★ {averageRating(concert)} / 5 · отзывов: {concert.reviews_count}</span>}<span>Интересуются: {concert.followers_count ?? 0}</span></p>
         <p className="local-plans-note">Ваши планы сохраняются только в этом браузере и не видны другим участникам.</p>
         <div className="description-block"><h2>О концерте</h2>{concert.description ? concert.description.split(/\n\s*\n/).filter(Boolean).map((paragraph, i) => <p key={i}>{paragraph}</p>) : <p className="muted">Подробная программа пока не опубликована. Следите за обновлениями.</p>}</div>
         {concert.images?.length > 1 && <div className="extra-images">{concert.images.filter(image => image.id !== (concert.images.find(image => image.is_cover) || concert.images[0]).id).map(image => <Poster key={image.id} event={{ ...concert, images: [image] }} />)}</div>}
       </div></section>
-      <section className="reviews-block" aria-labelledby="reviews-heading"><div className="reviews-title"><h2 id="reviews-heading">После последнего аккорда</h2><span className="coming-soon">СКОРО</span></div><p className="muted">Место для ваших впечатлений о концерте.</p><div className="reviews-empty"><Icon name="star" size={28} /><div><h3>Здесь будут отзывы слушателей.</h3><p>Публикация отзывов пока недоступна.<br />А поделиться впечатлениями уже можно в обсуждении.</p><a className="inline-button" href="#discussion">Перейти к обсуждению<Icon name="arrow" size={15} /></a></div></div><label className="sr-only" htmlFor="review-draft">Отзыв — публикация пока недоступна</label><textarea id="review-draft" placeholder="Что вам запомнилось?" rows={3} disabled /><div className="reviews-form-footer"><span>Возможность готовится к открытию</span><button className="button secondary" disabled>Оставить отзыв</button></div></section>
+      <Reviews concert={concert} session={session} openAuth={openAuth} notify={notify} onStats={stats => setConcert(current => ({ ...current, rating_sum: stats.rating_sum, reviews_count: stats.reviews_count }))} />
     </div><aside className="discussion-aside"><Discussion id={id} session={session} openAuth={openAuth} /><p className="discussion-footnote">Знакомьтесь, договаривайтесь о встрече<br />и будьте внимательны друг к другу.</p></aside></div>
   </div>;
 }

@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { hash, time, weekday, dateShort } from './utils.js';
 import { mediaUrl } from './api.js';
@@ -41,24 +41,34 @@ export function Link({ to, children, onClick, ...props }) {
 
 export function Modal({ title, children, onClose, className = '' }) {
   const ref = useRef(null);
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
   const id = useId();
-  useEffect(() => {
+  useLayoutEffect(() => {
     const oldFocus = document.activeElement;
     const oldOverflow = document.body.style.overflow;
+    const root = document.getElementById('root');
+    const oldInert = root?.inert;
+    if (root) root.inert = true;
     document.body.style.overflow = 'hidden';
     const dialog = ref.current;
-    (dialog.querySelector('input, textarea, button') || dialog).focus();
+    (dialog.querySelector('input:not([disabled]), textarea:not([disabled])') || dialog).focus();
     const keyDown = event => {
-      if (event.key === 'Escape') onClose();
+      if (event.key === 'Escape') closeRef.current();
       if (event.key !== 'Tab') return;
       const focusable = [...dialog.querySelectorAll('a[href], button, input, textarea, select, [tabindex="0"]')].filter(el => !el.disabled && el.offsetParent !== null);
       const first = focusable[0], last = focusable.at(-1);
       if (event.shiftKey && (document.activeElement === first || !dialog.contains(document.activeElement))) { event.preventDefault(); last?.focus(); }
-      if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+      if (!event.shiftKey && (document.activeElement === last || document.activeElement === dialog || !dialog.contains(document.activeElement))) { event.preventDefault(); first?.focus(); }
+      if (!first) { event.preventDefault(); dialog.focus(); }
     };
     document.addEventListener('keydown', keyDown);
-    return () => { document.body.style.overflow = oldOverflow; document.removeEventListener('keydown', keyDown); oldFocus?.focus(); };
-  }, [onClose]);
+    return () => { document.body.style.overflow = oldOverflow; if (root) root.inert = oldInert; document.removeEventListener('keydown', keyDown); if (oldFocus?.isConnected) oldFocus.focus(); else document.getElementById('main')?.focus(); };
+  }, []);
+  useLayoutEffect(() => {
+    const dialog = ref.current;
+    if (dialog && !dialog.contains(document.activeElement)) dialog.focus();
+  });
   return createPortal(<div className="modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
     <section ref={ref} className={`modal ${className}`} role="dialog" aria-modal="true" aria-labelledby={id} tabIndex={-1}>
       <button className="icon-button modal-close" aria-label="Закрыть окно" onClick={onClose}><Icon name="close" /></button>
@@ -77,14 +87,19 @@ export function ErrorState({ message, retry, compact = false }) {
   </div>;
 }
 
-export function Poster({ event, featured = false }) {
+export function Poster({ event, featured = false, retryKey = 0, onImageError, showRetry = true }) {
   const [failed, setFailed] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const imageRef = useRef(null);
   const image = mediaUrl(event.cover_url || event.images?.find(image => image.is_cover)?.image_url || event.images?.[0]?.image_url);
-  useEffect(() => setFailed(false), [image]);
+  useLayoutEffect(() => {
+    setFailed(false);
+    setLoading(Boolean(image && !(imageRef.current?.complete && imageRef.current.naturalWidth > 0)));
+  }, [image, retryKey]);
   const variant = hash(event.id) % 4;
   const uid = useId().replaceAll(':', '');
   return <div className={`poster poster-${variant} ${featured ? 'poster-featured' : ''}`}>
-    {image && !failed ? <img src={image} alt={`Афиша: ${event.title}`} loading={featured ? 'eager' : 'lazy'} onError={() => setFailed(true)} /> : <>
+    {image && !failed ? <><img ref={imageRef} src={image} alt={`Афиша: ${event.title}`} loading={featured ? 'eager' : 'lazy'} onLoad={() => setLoading(false)} onError={() => { setLoading(false); setFailed(true); onImageError?.(); }} />{loading && <span className="poster-loading" role="status">Загружаем постер…</span>}</> : <>
       <div className="poster-top"><span>МУЗЫКАЛЬНЫЕ<br />ПОНЕДЕЛЬНИКИ</span><span>ЖИВОЙ<br />ЗВУК</span></div>
       <svg className="poster-art" viewBox="0 0 440 330" fill="none" aria-hidden="true">
         <defs><clipPath id={uid}><rect x="24" y="0" width="392" height="330" /></clipPath></defs>
@@ -97,6 +112,7 @@ export function Poster({ event, featured = false }) {
       </svg>
       <div className="poster-bottom"><span>{dateShort(event.starts_at)}</span><span>{time(event.starts_at)}</span></div>
     </>}
+    {image && failed && showRetry && <div className="poster-error" role="alert"><span>Не удалось загрузить постер.</span><button className="inline-button" onClick={() => { setFailed(false); setLoading(true); }}>Повторить загрузку</button></div>}
     {event.status === 'cancelled' && <span className="poster-status">Концерт отменён</span>}
   </div>;
 }

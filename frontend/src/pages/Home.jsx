@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api.js';
 import { DateLine, ErrorState, Icon, Link, Poster } from '../components.jsx';
-import { dateShort, filterConcerts, isPast, monthKey, monthLabel } from '../utils.js';
+import { averageRating, dateShort, filterConcerts, isPast, monthKey, monthLabel } from '../utils.js';
 
 function HeroArt() {
   return <div className="hero-art" aria-hidden="true"><svg viewBox="0 0 540 430" fill="none">
@@ -21,16 +21,20 @@ function HeroArt() {
 
 function ConcertCard({ event, planned, togglePlan }) {
   const past = isPast(event);
+  const [imageError, setImageError] = useState(false), [imageRetry, setImageRetry] = useState(0);
+  useEffect(() => setImageError(false), [event.cover_url]);
   return <article className={`concert-card ${event.status === 'cancelled' ? 'cancelled-card' : ''}`}>
-    <Link to={`/concert/${event.id}`} className="poster-link" aria-label={`Подробнее: ${event.title}`}><Poster event={event} /><span className="poster-open"><Icon name="arrow" size={22} /></span></Link>
+    <Link to={`/concert/${event.id}`} className="poster-link" aria-label={`Подробнее: ${event.title}`}><Poster event={event} retryKey={imageRetry} onImageError={() => setImageError(true)} showRetry={false} /><span className="poster-open"><Icon name="arrow" size={22} /></span></Link>
+    {imageError && <p className="card-image-error" role="alert">Постер не загрузился. <button className="inline-button" onClick={() => { setImageError(false); setImageRetry(value => value + 1); }}>Повторить</button></p>}
     <div className="card-meta"><DateLine event={event} /><span className="age-limit">{event.age_limit ?? 0}+</span></div>
     <h3><Link to={`/concert/${event.id}`}>{event.title}</Link></h3>
+    <p className="card-statistics">{averageRating(event) && <span>★ {averageRating(event)} / 5 · отзывов: {event.reviews_count}</span>}<span>Интересуются: {event.followers_count ?? 0}</span></p>
     <p className="card-description">{event.short_description || 'Встречаемся, чтобы услышать больше.'}</p>
     <div className="card-bottom"><span className="card-venue"><Icon name="pin" size={15} />{event.venue_names?.join(', ') || 'Площадка уточняется'}</span><button className={`save-button ${planned ? 'saved' : ''}`} aria-label={planned ? `Убрать из планов: ${event.title}` : `Хочу пойти: ${event.title}`} aria-pressed={planned} onClick={() => togglePlan(event.id)} disabled={!planned && (past || event.status === 'cancelled')} title={planned ? 'Убрать из моих планов' : past ? 'Концерт уже прошёл' : 'Сохранить в мои планы'}><Icon name="heart" size={19} fill={planned ? 'currentColor' : 'none'} /></button></div>
   </article>;
 }
 
-export default function Home({ onlyPlans, plans, togglePlan, openAuth }) {
+export default function Home({ onlyPlans, plans, togglePlan, openAuth, session }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -62,6 +66,7 @@ export default function Home({ onlyPlans, plans, togglePlan, openAuth }) {
     {!onlyPlans && <div className="under-hero container"><span>Хорошая традиция — начинать неделю с музыки.</span>{next ? <Link to={`/concert/${next.id}`}><span>Ближайшая встреча</span><strong>{dateShort(next.starts_at)}</strong><Icon name="arrow" size={16} /></Link> : <span className="under-hero-note">До встречи в зале</span>}</div>}
     <section className="afisha-section container" id="afisha" aria-labelledby="afisha-title">
       <div className="section-heading"><div><div className="eyebrow">{onlyPlans ? 'ВАША ЛИЧНАЯ АФИША' : 'ВСТРЕЧИ, КОТОРЫЕ СТОИТ УСЛЫШАТЬ'}</div><SectionTitle id="afisha-title">{onlyPlans ? 'Мои планы' : 'Афиша концертов'}<span className="heading-dot">.</span></SectionTitle></div><span className="section-aside">{onlyPlans ? 'Сохраняются в этом браузере' : 'Живая музыка. Живое общение.'}</span></div>
+      {onlyPlans && <p className="plans-privacy">Планы хранятся только в этом браузере, не видны другим и не увеличивают число подписчиков концерта.</p>}
       <div className="filters"><div className="period-tabs" role="group" aria-label="Период концертов">{[['all', 'Все концерты'], ['upcoming', 'Ближайшие'], ['past', 'Прошедшие']].map(([value, label]) => <button key={value} className={period === value ? 'selected' : ''} aria-pressed={period === value} onClick={() => setPeriod(value)}>{label}</button>)}</div>
         <div className="filter-fields"><label className="search-field"><Icon name="search" size={17} /><span className="sr-only">Поиск концертов</span><input type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder="Название, исполнитель…" /></label><label className="month-field"><span className="sr-only">Месяц концерта</span><select value={month} onChange={event => setMonth(event.target.value)}><option value="">Все месяцы</option>{months.map(month => <option key={month.value} value={month.value}>{month.label}</option>)}</select></label></div>
       </div>
@@ -71,6 +76,6 @@ export default function Home({ onlyPlans, plans, togglePlan, openAuth }) {
         {visibleCount < filtered.length && <div className="load-more"><button className="button secondary" onClick={() => setVisibleCount(count => count + 9)}>Ещё концерты<Icon name="arrow" /></button><span>Показано {visibleCount} из {filtered.length}</span></div>}
       </>}
     </section>
-    {!onlyPlans && <section className="club-strip container"><span className="club-strip-symbol" aria-hidden="true">&</span><div><div className="eyebrow">СВОИ ЛЮДИ В СОСЕДНЕМ КРЕСЛЕ</div><h2>Вместе слушать интереснее.</h2><p>Обсудите программу, договоритесь о встрече<br className="desktop-break" /> и поделитесь тем, что осталось после концерта.</p></div><button className="button secondary" onClick={openAuth}>Стать частью клуба<Icon name="arrow" size={18} /></button></section>}
+    {!onlyPlans && <section className="club-strip container"><span className="club-strip-symbol" aria-hidden="true">&</span><div><div className="eyebrow">СВОИ ЛЮДИ В СОСЕДНЕМ КРЕСЛЕ</div><h2>Вместе слушать интереснее.</h2><p>Обсудите программу, договоритесь о встрече<br className="desktop-break" /> и поделитесь тем, что осталось после концерта.</p></div>{session ? <Link to="/plans" className="button secondary">Открыть мои планы<Icon name="arrow" size={18} /></Link> : <button className="button secondary" onClick={openAuth}>Стать частью клуба<Icon name="arrow" size={18} /></button>}</section>}
   </>;
 }
