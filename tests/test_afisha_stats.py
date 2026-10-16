@@ -14,8 +14,19 @@ from sqlalchemy.orm import selectinload
 
 from src.core.config import settings
 from src.domain.err import NotFoundError
-from src.repositories.storage.models import AfishaModel, AfishaStatsModel, UserModel
+from src.repositories.storage.models import (
+    AfishaModel,
+    AfishaStatsModel,
+    UserModel,
+    VenueModel,
+)
+from src.repositories.storage.models.afisha.association import afisha_venues
 from src.repositories.storage.models.user import user_afisha_follows
+from src.transport.api.v1.map.afisha import (
+    map_afisha_to_list_response,
+    map_afisha_to_response,
+)
+from src.usecase.afisha.afisha_service import afisha_service
 from src.usecase.afisha.afisha_stats_service import afisha_stats_service
 
 
@@ -116,6 +127,44 @@ class AfishaStatsTests(unittest.IsolatedAsyncioTestCase):
                 await afisha_stats_service.get_stats_by_afisha_id(
                     afisha_id=uuid4(), session=session
                 )
+
+    async def test_afisha_responses_include_followers_count(self):
+        venue_id = uuid4()
+        now = datetime.now(UTC)
+        async with self.engine.begin() as connection:
+            await connection.execute(
+                insert(VenueModel).values(
+                    id=venue_id,
+                    name="Test venue",
+                    city="Test city",
+                    address="Test address",
+                )
+            )
+            await connection.execute(
+                insert(afisha_venues),
+                [
+                    {"afisha_id": afisha_id, "venue_id": venue_id}
+                    for afisha_id in self.afishas
+                ],
+            )
+            await connection.execute(
+                update(AfishaModel)
+                .where(AfishaModel.id.in_(self.afishas))
+                .values(created_at=now - timedelta(days=1), updated_at=now)
+            )
+
+        async with self.factory() as session:
+            result = await afisha_service.list_afisha(session, page_size=10)
+            counts = {
+                item.id: item.followers_count
+                for item in map_afisha_to_list_response(result).items
+            }
+            self.assertEqual(counts, dict(zip(self.afishas, (1, 0), strict=True)))
+
+            detail = await afisha_service.read_afisha(self.afishas[0], session)
+            response = map_afisha_to_response(detail)
+            self.assertEqual(response.followers_count, 1)
+            self.assertNotIn("flowers_count", response.model_dump())
 
     async def test_backfill_new_afisha_and_orm_relationship(self):
         self.assertEqual(await self.count(self.afishas[0]), 1)

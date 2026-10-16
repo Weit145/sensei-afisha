@@ -12,6 +12,7 @@ class AfishaListItem:
     cover_file_name: str | None
     rating_sum: int = 0
     reviews_count: int = 0
+    followers_count: int = 0
 
 
 @dataclass
@@ -38,3 +39,4 @@ class AfishaDetailResult:
     images: list[AfishaImageItem] = field(default_factory=list)
     rating_sum: int = 0
     reviews_count: int = 0
+    followers_count: int = 0

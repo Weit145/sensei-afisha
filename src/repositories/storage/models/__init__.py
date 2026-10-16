@@ -1,15 +1,15 @@
 __all__ = (
     "AfishaImageModel",
     "AfishaModel",
+    "AfishaReviewsModel",
     "AfishaStatsModel",
     "Base",
+    "ConnectionInfo",
     "MessageModel",
+    "ReviewsModel",
     "UserModel",
     "UserSessionModel",
     "VenueModel",
-    "ConnectionInfo",
-    "ReviewsModel",
-    "AfishaReviewsModel",
 )
 
 

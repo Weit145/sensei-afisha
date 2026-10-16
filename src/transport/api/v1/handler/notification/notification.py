@@ -2,7 +2,6 @@ import logging
 
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 
-from src.repositories.storage.models.connectioninfo import NotificationType
 from src.usecase.notification_service import notification_service
 
 logger = logging.getLogger(__name__)

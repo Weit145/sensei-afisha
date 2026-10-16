@@ -50,6 +50,7 @@ def map_to_response(
         images=map_list_dto_to_response_img(result),
         rating_sum = result.rating_sum,
         reviews_count = result.reviews_count,
+        followers_count=result.followers_count,
         created_at=result.created_at,
         updated_at=result.updated_at,
     )
@@ -107,6 +108,7 @@ def map_list_to_short_afish(
                 ends_at=item.afisha.ends_at,
                 rating_sum = item.rating_sum,
                 reviews_count = item.reviews_count,
+                followers_count=item.followers_count,
                 venue_names=list(item.venue_names),
                 cover_url=(
                     _image_url(item.cover_file_name)

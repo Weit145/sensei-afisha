@@ -21,13 +21,18 @@ from src.repositories.storage.map.afisha import (
 )
 from src.repositories.storage.postgres.afisha import (
     SQLAlchemyAfishaRepository,
+    SQLAlchemyAfishaStatsRepository,
     SQLAlchemyImgRepository,
 )
 from src.repositories.storage.postgres.reviews_repository import AfishaReviewsRepository
 from src.usecase.afisha.dto import AfishaDetailResult, AfishaListResult
 from src.usecase.notification_service import NotificationService, notification_service
-from src.usecase.port.afisha import AfishaRepository, ImgInfastructure, ImgRepository
-from src.usecase.port.notifier import Notifier
+from src.usecase.port.afisha import (
+    AfishaRepository,
+    AfishaStatsRepository,
+    ImgInfastructure,
+    ImgRepository,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -39,11 +44,13 @@ class AfishaService:
         img_repo: ImgRepository,
         img_inf: ImgInfastructure,
         event: NotificationService,
+        afisha_stats_repo: AfishaStatsRepository,
     ) -> None:
         self.afish_repo = afish_repo
         self.img_repo = img_repo
         self.img_inf = img_inf
         self.event = event
+        self.afisha_stats_repo = afisha_stats_repo
 
     async def create_afisha(
         self,
@@ -163,11 +170,18 @@ class AfishaService:
             [item.afisha.id for item in items]
         )
         stats_by_afisha_id = {item.afisha_id: item for item in stats}
+        follower_stats = await self.afisha_stats_repo.get_by_afisha_ids(
+            session, [item.afisha.id for item in items]
+        )
+        followers_by_afisha_id = {
+            item.afisha_id: item.followers_count for item in follower_stats
+        }
         for item in items:
             review_stats = stats_by_afisha_id.get(item.afisha.id)
             if review_stats is not None:
                 item.rating_sum = review_stats.rating_sum
                 item.reviews_count = review_stats.reviews_count
+            item.followers_count = followers_by_afisha_id.get(item.afisha.id, 0)
         return AfishaListResult(
             items=items,
             total=total,
@@ -190,17 +204,22 @@ class AfishaService:
         ]
         return result
 
-    @staticmethod
     async def _set_review_stats(
+        self,
         result: AfishaDetailResult,
         session: AsyncSession,
     ) -> None:
         stats = await AfishaReviewsRepository(session).get_stats_by_afisha_ids(
             [result.afisha.id]
         )
+        followers = await self.afisha_stats_repo.get_by_afisha_id(
+            session, result.afisha.id
+        )
         if stats:
             result.rating_sum = stats[0].rating_sum
             result.reviews_count = stats[0].reviews_count
+        if followers:
+            result.followers_count = followers.followers_count
 
 
     @staticmethod
@@ -217,4 +236,5 @@ afisha_service = AfishaService(
     img_repo=SQLAlchemyImgRepository(),
     img_inf=ImgInfastructureMain(),
     event=notification_service,
+    afisha_stats_repo=SQLAlchemyAfishaStatsRepository(),
 )

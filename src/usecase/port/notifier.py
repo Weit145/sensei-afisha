@@ -4,8 +4,6 @@ from typing import Protocol
 from fastapi import WebSocket
 
 from src.repositories.storage.models.connectioninfo import (
-    MAIN_MENU_ID,
-    ConnectionInfo,
     NotificationType,
 )
 
