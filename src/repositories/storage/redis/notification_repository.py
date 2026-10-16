@@ -11,8 +11,8 @@ from src.repositories.storage.redis.db_helper import redis_helper
 
 class RedisNotificationRepository:
 
-    def __init__(self, redis: Redis) -> None:
-        self.redis = redis
+    def __init__(self, redis) -> None:
+        self.redis = redis_helper 
 
     async def save_notification(self, info: ConnectionInfo, ttl: int = 3600) -> None:
         """Сохраняет полную информацию о соединении в Redis."""

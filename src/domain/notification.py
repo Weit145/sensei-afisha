@@ -13,3 +13,9 @@ class NotificationType(Enum):
 class Notification:
     n_type: NotificationType = field(default=NotificationType.MAIN_MENU)
     content: str = field(default="")
+
+    def dump_to_json(self) -> str:
+        """Сериализует уведомление в JSON-строку."""
+        data = asdict(self)
+        data["n_type"] = self.n_type.value  # Enum → int
+        return json.dumps(data, ensure_ascii=False)
