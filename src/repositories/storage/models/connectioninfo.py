@@ -1,3 +1,4 @@
+import uuid
 from dataclasses import dataclass
 from enum import Enum
 
@@ -9,11 +10,14 @@ class NotificationType(Enum):
     DISCUSSION = 2
     FEEDBACK = 3
 
+
 MAIN_MENU_ID = -1
+
+
 @dataclass
 class ConnectionInfo:
     connection_id: str
-    user_ip : str
-    server_id : int 
-    n_type: NotificationType 
-    afisha_id: int = MAIN_MENU_ID
+    user_ip: str
+    server_id: int
+    n_type: NotificationType
+    afisha_id: uuid.UUID | int = MAIN_MENU_ID
