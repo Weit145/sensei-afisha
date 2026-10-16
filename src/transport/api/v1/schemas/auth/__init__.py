@@ -5,6 +5,7 @@ from .auth import (
     RegisterRequest,
     UpdateUserContactsRequest,
     UserContactsResponse,
+    UserPublicContactsResponse,
     UserResponse,
 )
 
@@ -15,5 +16,6 @@ __all__ = (
     "RegisterRequest",
     "UpdateUserContactsRequest",
     "UserContactsResponse",
+    "UserPublicContactsResponse",
     "UserResponse",
 )
