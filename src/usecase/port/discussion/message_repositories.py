@@ -4,6 +4,7 @@ from typing import Protocol
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.domain.discussion.message import Message
+from src.usecase.discussion.dto.message import MessageCursor
 
 
 class MessageRepository(Protocol):
@@ -17,6 +18,11 @@ class MessageRepository(Protocol):
         self, message: Message, session: AsyncSession
     ) -> Message: ...
     async def list_messages(
-        self, afisha_id: uuid.UUID, session: AsyncSession
+        self,
+        afisha_id: uuid.UUID,
+        session: AsyncSession,
+        *,
+        limit: int,
+        before: MessageCursor | None,
     ) -> list[Message]: ...
     async def commit(self, session: AsyncSession) -> None: ...
