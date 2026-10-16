@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 
 from sqlalchemy import DateTime, String
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base
 
@@ -22,3 +22,8 @@ class UserModel(Base):
         nullable=False,
         default=lambda: datetime.now(UTC),
     )
+    reviews: Mapped[list["ReviewsModel"]] = relationship(
+    "ReviewsModel",
+    back_populates="author",
+    passive_deletes=True,
+)

@@ -1,4 +1,4 @@
-.PHONY: up down logs migrate revision delete
+.PHONY: up down logs migrate revision delete seed-examples
 
 up:
 	docker compose up --build -d
@@ -11,6 +11,9 @@ logs:
 
 migrate:
 	docker compose run --rm migrate
+
+seed-examples:
+	python3 scripts/seed_examples.py
 
 revision:
 	@test -n "$(MESSAGE)" || (echo 'Usage: make revision MESSAGE="description"' >&2; exit 1)
