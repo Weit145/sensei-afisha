@@ -24,9 +24,10 @@ from src.transport.api.v1.schemas.discussion.message import (
 )
 from src.usecase.discussion.dto.message import DEFAULT_MESSAGE_LIMIT, MAX_MESSAGE_LIMIT
 from src.usecase.discussion.message_service import MessageService
+from src.usecase.notification_service import notification_service
 
 router = APIRouter(prefix="/afisha/{afisha_id}/messages", tags=["Discussion"])
-message_service = MessageService(SQLAlchemyMessageRepository())
+message_service = MessageService(SQLAlchemyMessageRepository(), notification_service)
 SessionDep = Annotated[AsyncSession, Depends(db_helper.get_session)]
 
 

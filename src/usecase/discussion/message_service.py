@@ -1,3 +1,4 @@
+import logging
 import uuid
 
 from sqlalchemy.exc import IntegrityError
@@ -12,11 +13,17 @@ from src.usecase.discussion.dto.message import (
     MessageListResult,
 )
 from src.usecase.port.discussion.message_repositories import MessageRepository
+from src.usecase.port.notifier import Notifier
+
+logger = logging.getLogger(__name__)
 
 
 class MessageService:
-    def __init__(self, repo: MessageRepository) -> None:
+    def __init__(
+        self, repo: MessageRepository, notifier: Notifier | None = None
+    ) -> None:
         self.repo = repo
+        self.notifier = notifier
 
     async def _require_afisha(
         self, afisha_id: uuid.UUID, session: AsyncSession
@@ -42,6 +49,17 @@ class MessageService:
             await self._require_author(message.author_id, session)
             await self._require_afisha(message.afisha_id, session)
             raise
+        if self.notifier is not None:
+            try:
+                await self.notifier.SendAboutNewDescussionMessages(
+                    created.afisha_id, created.text, created.author_id
+                )
+            except Exception:
+                # The message is already committed; a failed notification must not
+                # turn a successful POST into an error and cause a duplicate retry.
+                logger.exception(
+                    "Could not notify subscribers about message %s", created.id
+                )
         return created
 
     async def list_messages(

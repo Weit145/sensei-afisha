@@ -10,17 +10,23 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from urllib.parse import urlencode
 
-os.environ.setdefault("JWT_SECRET_KEY", "discussion-pagination-test-secret")
+os.environ.setdefault("JWT_SECRET_KEY", "discussion-pagination-tests-only-secret")
 
 from alembic import command
 from alembic.config import Config
 from fastapi import FastAPI
-from sqlalchemy import delete
+from sqlalchemy import delete, update
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
 
+from src.domain.user import UserRole
 from src.infrastructure.jwt import create_token
-from src.repositories.storage.models import AfishaModel, MessageModel, UserModel
+from src.repositories.storage.models import (
+    AfishaModel,
+    MessageModel,
+    UserModel,
+    UserSessionModel,
+)
 from src.repositories.storage.postgres.db_helper import db_helper
 from src.transport.api.v1.handler.discussion.message import router
 from src.transport.api.v1.map.discussion.message import decode_cursor, encode_cursor
@@ -102,6 +108,7 @@ class PaginationPostgresTests(unittest.IsolatedAsyncioTestCase):
 
         self.app.dependency_overrides[db_helper.get_session] = get_session
         self.author_id = uuid.uuid4()
+        self.session_id = uuid.uuid4()
         self.afisha_id = uuid.uuid4()
         self.other_afisha_id = uuid.uuid4()
         self.timestamp = datetime.now(UTC) - timedelta(days=1)
@@ -120,6 +127,15 @@ class PaginationPostgresTests(unittest.IsolatedAsyncioTestCase):
                     )
                     for concert_id in (self.afisha_id, self.other_afisha_id)
                 ]
+            )
+            await session.flush()
+            session.add(
+                UserSessionModel(
+                    id=self.session_id,
+                    user_id=self.author_id,
+                    refresh_token_hash="0" * 64,
+                    expires_at=datetime.now(UTC) + timedelta(days=1),
+                )
             )
             await session.commit()
 
@@ -245,10 +261,17 @@ class PaginationPostgresTests(unittest.IsolatedAsyncioTestCase):
         await self.seed(5)
         _, page = await self.request(params={"limit": 2})
         for role in ("user", "admin"):
+            async with self.sessions() as session:
+                await session.execute(
+                    update(UserModel)
+                    .where(UserModel.id == self.author_id)
+                    .values(role=role)
+                )
+                await session.commit()
             status, sent = await self.request(
                 method="POST",
                 body={"text": f"New {role}"},
-                token=create_token(str(self.author_id), role),
+                token=create_token(self.author_id, UserRole(role), self.session_id),
             )
             self.assertEqual(status, 201)
             self.assertEqual(sent["author_id"], str(self.author_id))

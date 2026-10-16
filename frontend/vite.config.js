@@ -4,8 +4,8 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   const target = env.API_PROXY_TARGET || 'http://127.0.0.1:8080';
   return {
-    server: { proxy: { '/api': { target }, '/uploads': { target } } },
-    preview: { proxy: { '/api': { target }, '/uploads': { target } } },
+    server: { proxy: { '/api': { target, ws: true }, '/uploads': { target } } },
+    preview: { proxy: { '/api': { target, ws: true }, '/uploads': { target } } },
     esbuild: { jsx: 'automatic' },
   };
 });
