@@ -5,7 +5,10 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.repositories.storage.postgres.db_helper import db_helper
-from src.transport.api.v1.map.auth.user import map_to_auth_response
+from src.transport.api.v1.map.auth.user import (
+    map_to_auth_response,
+    map_to_contacts_response,
+)
 from src.transport.api.v1.middleware.auth_cookie import (
     REFRESH_COOKIE_NAME,
     clear_refresh_cookie,
@@ -18,6 +21,8 @@ from src.transport.api.v1.schemas.auth import (
     AuthResponse,
     LoginRequest,
     RegisterRequest,
+    UpdateUserContactsRequest,
+    UserContactsResponse,
     UserResponse,
 )
 from src.usecase.auth.auth_service import (
@@ -122,3 +127,35 @@ async def me(current_user: CurrentUserDep, response: Response) -> UserResponse:
     return UserResponse(
         id=current_user.user_id, username=current_user.username, role=current_user.role
     )
+
+
+@router.get("/me/contacts", response_model=UserContactsResponse)
+async def get_contacts(
+    current_user: CurrentUserDep,
+    response: Response,
+) -> UserContactsResponse:
+    prevent_caching(response)
+    return UserContactsResponse(
+        tg_url=current_user.tg_url,
+        vk_url=current_user.vk_url,
+    )
+
+
+@router.patch(
+    "/me/contacts",
+    response_model=UserContactsResponse,
+    dependencies=[Depends(require_csrf_header)],
+)
+async def update_contacts(
+    data: UpdateUserContactsRequest,
+    current_user: CurrentUserDep,
+    session: SessionDep,
+    response: Response,
+) -> UserContactsResponse:
+    user = await auth_service.update_contacts(
+        current_user.user_id,
+        data.model_dump(exclude_unset=True),
+        session,
+    )
+    prevent_caching(response)
+    return map_to_contacts_response(user)

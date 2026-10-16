@@ -18,6 +18,17 @@ class UserModel(Base):
     username: Mapped[str] = mapped_column(String(30), unique=True, index=True)
     role: Mapped[str] = mapped_column(String(10))
     hashed_password: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+    tg_url: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+        default=None,
+    )
+    vk_url: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+        default=None,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
