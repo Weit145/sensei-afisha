@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
 from hmac import compare_digest
 from typing import Any, Literal
@@ -141,6 +142,26 @@ class AuthService:
         if db_user is None:
             raise InvalidTokenError
         return map_to_domain(db_user)
+
+    async def update_contacts(
+        self,
+        user_id: UUID,
+        contacts: Mapping[str, str | None],
+        session: AsyncSession,
+    ) -> User:
+        try:
+            db_user = await self.repo.get_by_user_id(session, user_id)
+            if db_user is None:
+                raise InvalidTokenError
+            if "tg_url" in contacts:
+                db_user.tg_url = contacts["tg_url"]
+            if "vk_url" in contacts:
+                db_user.vk_url = contacts["vk_url"]
+            await session.commit()
+            return map_to_domain(db_user)
+        except Exception:
+            await session.rollback()
+            raise
 
     async def _create_session(self, user: User, session: AsyncSession) -> AuthResult:
         user_session = UserSessionModel(

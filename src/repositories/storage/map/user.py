@@ -8,6 +8,8 @@ def map_to_model(user: User) -> UserModel:
         username=user.username,
         role=user.role.value,
         hashed_password=user.hashed_password,
+        tg_url=user.tg_url,
+        vk_url=user.vk_url,
         created_at=user.created_at,
     )
 
@@ -18,5 +20,7 @@ def map_to_domain(model: UserModel) -> User:
         username=model.username,
         role=UserRole(model.role),
         hashed_password=model.hashed_password,
+        tg_url=model.tg_url,
+        vk_url=model.vk_url,
         created_at=model.created_at,
     )

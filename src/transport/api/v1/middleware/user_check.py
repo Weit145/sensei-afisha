@@ -26,7 +26,13 @@ async def get_current_user(
         if credentials is None:
             raise InvalidTokenError
         user = await auth_service.get_current_user(credentials.credentials, session)
-        return CurrentUser(user_id=user.id, username=user.username, role=user.role)
+        return CurrentUser(
+            user_id=user.id,
+            username=user.username,
+            role=user.role,
+            tg_url=user.tg_url,
+            vk_url=user.vk_url,
+        )
 
     except InvalidTokenError as exc:
         raise HTTPException(

@@ -252,6 +252,74 @@ class AuthTests(unittest.IsolatedAsyncioTestCase):
                 await connection.scalar(text("SELECT count(*) FROM users")), 2
             )
 
+    async def test_add_update_and_get_user_contacts(self):
+        data, _, _ = await self.register()
+        access = data["access_token"]
+
+        status, contacts, headers = await self.request(
+            "me/contacts",
+            access=access,
+            method="GET",
+        )
+        self.assertEqual((status, contacts), (200, {"tg_url": None, "vk_url": None}))
+        self.assertEqual(headers["cache-control"], "no-store")
+
+        status, contacts, _ = await self.request(
+            "me/contacts",
+            access=access,
+            method="PATCH",
+            data={
+                "tg_url": " https://t.me/alice_1 ",
+                "vk_url": "https://vk.com/alice_1",
+            },
+        )
+        self.assertEqual(status, 200)
+        self.assertEqual(
+            contacts,
+            {
+                "tg_url": "https://t.me/alice_1",
+                "vk_url": "https://vk.com/alice_1",
+            },
+        )
+
+        status, contacts, _ = await self.request(
+            "me/contacts",
+            access=access,
+            method="PATCH",
+            data={"tg_url": None},
+        )
+        self.assertEqual(
+            (status, contacts),
+            (200, {"tg_url": None, "vk_url": "https://vk.com/alice_1"}),
+        )
+
+        status, contacts, _ = await self.request(
+            "me/contacts",
+            access=access,
+            method="GET",
+        )
+        self.assertEqual(
+            (status, contacts),
+            (200, {"tg_url": None, "vk_url": "https://vk.com/alice_1"}),
+        )
+
+        for invalid in (
+            {},
+            {"tg_url": "https://example.com/alice"},
+            {"vk_url": "http://vk.com/alice"},
+            {"vk_url": "https://vk.com"},
+        ):
+            status, _, _ = await self.request(
+                "me/contacts",
+                access=access,
+                method="PATCH",
+                data=invalid,
+            )
+            self.assertEqual(status, 422)
+
+        status, _, _ = await self.request("me/contacts", method="GET")
+        self.assertEqual(status, 401)
+
     async def test_independent_sessions_rotation_and_logout(self):
         first, refresh, _ = await self.register()
         second, other_refresh = await self.login()

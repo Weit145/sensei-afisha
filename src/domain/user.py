@@ -15,6 +15,9 @@ class User(Entity):
     role: UserRole = UserRole.USER
     hashed_password: str | None = None
 
+    tg_url: str | None = None
+    vk_url: str | None = None
+
     def is_admin(self) -> bool:
         return self.role is UserRole.ADMIN
 
