@@ -1,11 +1,12 @@
 import uuid
 
-from sqlalchemy import select
+from sqlalchemy import select, tuple_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.domain.discussion.message import Message
 from src.repositories.storage.map.discussion.message import map_to_domain, map_to_model
 from src.repositories.storage.models import AfishaModel, MessageModel, UserModel
+from src.usecase.discussion.dto.message import MessageCursor
 
 
 class SQLAlchemyMessageRepository:
@@ -33,13 +34,25 @@ class SQLAlchemyMessageRepository:
         return map_to_domain(model)
 
     async def list_messages(
-        self, afisha_id: uuid.UUID, session: AsyncSession
+        self,
+        afisha_id: uuid.UUID,
+        session: AsyncSession,
+        *,
+        limit: int,
+        before: MessageCursor | None,
     ) -> list[Message]:
-        models = await session.scalars(
+        query = (
             select(MessageModel)
             .where(MessageModel.afisha_id == afisha_id)
-            .order_by(MessageModel.created_at, MessageModel.id)
+            .order_by(MessageModel.created_at.desc(), MessageModel.id.desc())
+            .limit(limit)
         )
+        if before is not None:
+            query = query.where(
+                tuple_(MessageModel.created_at, MessageModel.id)
+                < (before.created_at, before.id)
+            )
+        models = await session.scalars(query)
         return [map_to_domain(model) for model in models]
 
     async def commit(self, session: AsyncSession) -> None:
