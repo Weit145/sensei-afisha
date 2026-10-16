@@ -95,7 +95,7 @@ class NotificationService:
             text=text,
             user_id= str(user_id)
         )
-        payload = notification.model_dump_json()
+        payload = notification.dump_to_json()
         ws = self.local.get(connection_id)
         if ws is not None:
             await self._safe_send(ws, payload, connection_id)
@@ -111,7 +111,7 @@ class NotificationService:
             text=  text,
             user_id= str(user_id)
         )
-        payload = notification.model_dump_json()
+        payload = notification.dump_to_json()
         connection_ids = list(self.rooms.get(afisha_id, set()))
 
         for connection_id in connection_ids:
@@ -126,7 +126,7 @@ class NotificationService:
             text = text,
             user_id= str(user_id)
         )
-        payload = notification.model_dump_json()
+        payload = notification.dump_to_json()
         connection_ids = list(self.rooms.get(afisha_id, set()))
 
         for connection_id in connection_ids:
@@ -157,13 +157,13 @@ class NotificationService:
         except Exception:
             logger.exception("Failed to send to connection_id=%s", connection_id)
             
-    async def SendToMainMenu(self, text: str, user_id) -> None:
+    async def SendToMainMenu(self, text: str) -> None:
         notification = Notification(
             n_type=NotificationType.DISCUSSION,
             text=  text,
-            user_id=str(user_id)
+            user_id="",
         )
-        payload = notification.model_dump_json()
+        payload = notification.dump_to_json()
         connection_ids = list(self.rooms.get(MAIN_MENU_ID, set()))
 
         for connection_id in connection_ids:
