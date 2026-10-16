@@ -1,6 +1,6 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 from enum import Enum
-
+import json
 
 # нужно для задания типа сообщения
 class NotificationType(Enum):
@@ -9,10 +9,12 @@ class NotificationType(Enum):
     FEEDBACK = 3
 
 # содержит в себе тип сообщения и его текст
+# текст, айди юзера
 @dataclass(slots=True)
 class Notification:
     n_type: NotificationType = field(default=NotificationType.MAIN_MENU)
-    content: str = field(default="")
+    text: str = field(default="")
+    user_id: str = field(default="")
 
     def dump_to_json(self) -> str:
         """Сериализует уведомление в JSON-строку."""
