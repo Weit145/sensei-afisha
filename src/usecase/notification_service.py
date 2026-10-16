@@ -73,12 +73,12 @@ class NotificationService:
             return True
         return await self.repo.connection_exists(connection_id)
 
-    async def SwitchAfisha(self, connection_id: str, afisha_id: int) -> None:
+    async def SwitchAfisha(self, connection_id: str, afisha_id: uuid.UUID) -> None:
         self._leave_room(connection_id)
         self._enter_room(connection_id, afisha_id)
         await self.repo.update_afisha_id(connection_id, afisha_id)
 
-    async def Subscribe(self, connection_id: str, afisha_id: int) -> None:
+    async def Subscribe(self, connection_id: str, afisha_id: uuid.UUID) -> None:
         self.current_afisha[connection_id] = afisha_id
         self.rooms.setdefault(afisha_id, set()).add(connection_id)
         await self.repo.update_afisha_id(connection_id, afisha_id)
@@ -88,11 +88,12 @@ class NotificationService:
         self._enter_room(connection_id, MAIN_MENU_ID)
         await self.repo.update_afisha_id(connection_id, MAIN_MENU_ID)
 
-    async def SendAboutNewEvents(self, connection_id: str, text: str) -> None:
+    async def SendAboutNewEvents(self, connection_id: str, text: str , user_id) -> None:
         """Собирает Notification о новом событии и шлёт конкретному соединению."""
         notification = Notification(
-            type=NotificationType.MAIN_MENU,
-            payload={"text": text},
+            n_type=NotificationType.MAIN_MENU,
+            text=text,
+            user_id= str(user_id)
         )
         payload = notification.model_dump_json()
         ws = self.local.get(connection_id)
@@ -103,11 +104,12 @@ class NotificationService:
         if info is not None:
             await self.repo.publish_to_server(info.server_id, payload)
 
-    async def SendAboutNewDescussionMessages(self, afisha_id: int, text: str) -> None:
+    async def SendAboutNewDescussionMessages(self, afisha_id: uuid.UUID, text: str, user_id) -> None:
         """Собирает Notification о новом сообщении в обсуждении и шлёт всем в комнате."""
         notification = Notification(
-            type=NotificationType.DISCUSSION,
-            payload={"afisha_id": afisha_id, "text": text},
+            n_type=NotificationType.DISCUSSION,
+            text=  text,
+            user_id= str(user_id)
         )
         payload = notification.model_dump_json()
         connection_ids = list(self.rooms.get(afisha_id, set()))
@@ -117,11 +119,12 @@ class NotificationService:
             if ws is not None:
                 await self._safe_send(ws, payload, connection_id)
 
-    async def SendAboutNewFeedBack(self, afisha_id: int, text: str) -> None:
+    async def SendAboutNewFeedBack(self, afisha_id: uuid.UUID, text: str, user_id) -> None:
         """Собирает Notification об отзыве и шлёт всем в комнате."""
         notification = Notification(
-            type=NotificationType.FEEDBACK,
-            payload={"afisha_id": afisha_id, "text": text},
+            n_type=NotificationType.DISCUSSION,
+            text = text,
+            user_id= str(user_id)
         )
         payload = notification.model_dump_json()
         connection_ids = list(self.rooms.get(afisha_id, set()))
@@ -131,7 +134,7 @@ class NotificationService:
             if ws is not None:
                 await self._safe_send(ws, payload, connection_id)
 
-    def _enter_room(self, connection_id: str, afisha_id: int) -> None:
+    def _enter_room(self, connection_id: str, afisha_id: uuid.UUID) -> None:
         """Добавляет connection_id в комнату afisha_id (RAM-индексы)."""
         self.current_afisha[connection_id] = afisha_id
         self.rooms.setdefault(afisha_id, set()).add(connection_id)
@@ -153,10 +156,12 @@ class NotificationService:
             await ws.send_text(payload)
         except Exception:
             logger.exception("Failed to send to connection_id=%s", connection_id)
-    async def SendToMainMenu(self, text: str) -> None:
+            
+    async def SendToMainMenu(self, text: str, user_id) -> None:
         notification = Notification(
-            type=NotificationType.MAIN_MENU,
-            payload={"text": text},
+            n_type=NotificationType.DISCUSSION,
+            text=  text,
+            user_id=str(user_id)
         )
         payload = notification.model_dump_json()
         connection_ids = list(self.rooms.get(MAIN_MENU_ID, set()))
