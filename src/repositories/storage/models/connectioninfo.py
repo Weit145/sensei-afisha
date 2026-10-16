@@ -12,6 +12,7 @@ class NotificationType(Enum):
 MAIN_MENU_ID = -1
 @dataclass
 class ConnectionInfo:
+    connection_id: str
     user_ip : str
     server_id : int 
     n_type: NotificationType 
