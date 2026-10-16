@@ -27,7 +27,6 @@ from src.transport.api.v1.schemas.reviews.reviews import (
 )
 from src.usecase.reviews.reviews_service import ReviewsService
 
-
 router = APIRouter(tags=["Reviews"])
 SessionDep = Annotated[AsyncSession, Depends(db_helper.get_session)]
 
