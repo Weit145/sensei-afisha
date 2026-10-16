@@ -9,6 +9,7 @@ from uuid import UUID, uuid4
 
 from alembic import command
 from alembic.config import Config
+from alembic.script import ScriptDirectory
 from jose import jwt
 from sqlalchemy import text
 from sqlalchemy.engine import make_url
@@ -18,8 +19,10 @@ from src.core.config import Settings, settings
 from src.infrastructure.jwt import decode_token, hash_refresh_token
 from src.main import app
 from src.repositories.storage.postgres.db_helper import db_helper
-from src.repositories.storage.postgres.user_repository import SQLAlchemyUserRepository
-from src.repositories.storage.postgres.user_session_repository import (
+from src.repositories.storage.postgres.user.user_repository import (
+    SQLAlchemyUserRepository,
+)
+from src.repositories.storage.postgres.user.user_session_repository import (
     SQLAlchemyUserSessionRepository,
 )
 from src.usecase.auth.auth_service import AuthService, auth_service
@@ -211,7 +214,7 @@ class AuthTests(unittest.IsolatedAsyncioTestCase):
                 await connection.scalar(
                     text("SELECT version_num FROM alembic_version")
                 ),
-                "20261015_01",
+                ScriptDirectory.from_config(Config("alembic.ini")).get_current_head(),
             )
             self.assertEqual(
                 await connection.scalar(

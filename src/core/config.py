@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import Field, model_validator
+from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     upload_dir: str = Field("uploads", validation_alias="UPLOAD_DIR")
 
     jwt_secret_key: str = Field(min_length=32, validation_alias="JWT_SECRET_KEY")
+    admin_password: SecretStr | None = Field(None, validation_alias="ADMIN_PASSWORD")
     jwt_algorithm: str = Field(
         "HS256",
         validation_alias="JWT_ALGORITHM",

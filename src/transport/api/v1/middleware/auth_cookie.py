@@ -12,7 +12,22 @@ REFRESH_COOKIE_PATH = "/api/auth"
 
 def require_csrf_header(
     request: Request,
-    x_requested_with: Annotated[str | None, Header()] = None,
+    x_requested_with: Annotated[
+        str | None,
+        Header(
+            description=(
+                "Обязательный CSRF-заголовок: XMLHttpRequest. "
+                "Swagger подставляет пример только в интерфейсе. "
+                "Без заголовка или с другим значением сервер вернёт 403 CSRF_FAILED."
+            ),
+            openapi_examples={
+                "csrf": {
+                    "summary": "Заголовок для авторизации с cookie",
+                    "value": "XMLHttpRequest",
+                }
+            },
+        ),
+    ] = None,
 ) -> None:
     origin = request.headers.get("origin")
     same_origin = str(request.base_url).rstrip("/")

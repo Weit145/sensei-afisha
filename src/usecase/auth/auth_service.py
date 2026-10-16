@@ -17,8 +17,10 @@ from src.infrastructure.jwt import (
 from src.infrastructure.password import hash_password, verify_password
 from src.repositories.storage.map.user import map_to_domain, map_to_model
 from src.repositories.storage.models.user import UserSessionModel
-from src.repositories.storage.postgres.user_repository import SQLAlchemyUserRepository
-from src.repositories.storage.postgres.user_session_repository import (
+from src.repositories.storage.postgres.user.user_repository import (
+    SQLAlchemyUserRepository,
+)
+from src.repositories.storage.postgres.user.user_session_repository import (
     SQLAlchemyUserSessionRepository,
 )
 from src.usecase.auth.dto.auth import AuthResult

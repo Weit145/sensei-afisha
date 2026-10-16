@@ -22,6 +22,7 @@ if TYPE_CHECKING:
     from ..discussion.message import MessageModel
     from ..user import UserModel
     from .img import AfishaImageModel
+    from .stats import AfishaStatsModel
     from .venue import VenueModel
 
 
@@ -102,4 +103,10 @@ class AfishaModel(Base):
     followers: Mapped[list["UserModel"]] = relationship(
         secondary=user_afisha_follows,
         back_populates="followed_afishas",
+    )
+
+    stats: Mapped["AfishaStatsModel"] = relationship(
+        back_populates="afisha",
+        viewonly=True,
+        lazy="raise"
     )

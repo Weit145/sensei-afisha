@@ -16,5 +16,6 @@ user_afisha_follows = Table(
         Uuid(as_uuid=True),
         ForeignKey("afisha.id", ondelete="CASCADE"),
         primary_key=True,
+        index=True,
     ),
 )
