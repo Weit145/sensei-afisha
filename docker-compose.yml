@@ -50,7 +50,7 @@ services:
       REDIS_URL: redis://redis:6379/0
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:?Set JWT_SECRET_KEY in .env}
     ports:
-      - "${APP_PORT:-8080}:8000"
+      - "${APP_PORT:-8080}:8001"
     volumes:
       - uploads_data:/app/uploads
   frontend:
