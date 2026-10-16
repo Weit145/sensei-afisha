@@ -15,8 +15,9 @@ os.environ.setdefault("JWT_SECRET_KEY", "discussion-pagination-tests-only-secret
 from alembic import command
 from alembic.config import Config
 from fastapi import FastAPI
-from sqlalchemy import delete, update
+from sqlalchemy import delete, select, text, update
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.orm import selectinload
 from sqlalchemy.pool import NullPool
 
 from src.domain.user import UserRole
@@ -27,6 +28,7 @@ from src.repositories.storage.models import (
     UserModel,
     UserSessionModel,
 )
+from src.repositories.storage.postgres.afisha import SQLAlchemyAfishaRepository
 from src.repositories.storage.postgres.db_helper import db_helper
 from src.transport.api.v1.handler.discussion.message import router
 from src.transport.api.v1.map.discussion.message import decode_cursor, encode_cursor
@@ -169,6 +171,64 @@ class PaginationPostgresTests(unittest.IsolatedAsyncioTestCase):
                 ]
             )
             await session.commit()
+
+    async def test_migration_and_deleting_afisha_cascade_messages(self):
+        constraint_sql = text(
+            "SELECT pg_get_constraintdef(oid) FROM pg_constraint "
+            "WHERE conrelid = 'discussion_messages'::regclass "
+            "AND conname = 'discussion_messages_afisha_id_fkey'"
+        )
+        config = Config(str(PROJECT_ROOT / "alembic.ini"))
+        config.set_main_option("path_separator", "os")
+
+        async with self.engine.begin() as connection:
+            def downgrade(sync_connection):
+                config.attributes["connection"] = sync_connection
+                command.downgrade(config, "99b73000c91d")
+
+            await connection.run_sync(downgrade)
+            self.assertIn("ON DELETE RESTRICT", await connection.scalar(constraint_sql))
+
+            def upgrade(sync_connection):
+                config.attributes["connection"] = sync_connection
+                command.upgrade(config, "head")
+
+            await connection.run_sync(upgrade)
+            self.assertIn("ON DELETE CASCADE", await connection.scalar(constraint_sql))
+
+        await self.seed(2)
+        async with self.sessions() as session:
+            await SQLAlchemyAfishaRepository().delete_afisha(session, self.afisha_id)
+            await session.commit()
+
+        async with self.sessions() as session:
+            self.assertIsNone(await session.get(AfishaModel, self.afisha_id))
+            self.assertIsNone(await session.get(MessageModel, uuid.UUID(int=1)))
+            self.assertIsNone(await session.get(MessageModel, uuid.UUID(int=2)))
+            message_id = uuid.uuid4()
+            session.add(
+                MessageModel(
+                    id=message_id,
+                    afisha_id=self.other_afisha_id,
+                    author_id=self.author_id,
+                    text="Loaded relationship",
+                )
+            )
+            await session.commit()
+
+        async with self.sessions() as session:
+            afisha = await session.scalar(
+                select(AfishaModel)
+                .options(selectinload(AfishaModel.messages))
+                .where(AfishaModel.id == self.other_afisha_id)
+            )
+            self.assertEqual(len(afisha.messages), 1)
+            await session.delete(afisha)
+            await session.commit()
+
+        async with self.sessions() as session:
+            self.assertIsNone(await session.get(AfishaModel, self.other_afisha_id))
+            self.assertIsNone(await session.get(MessageModel, message_id))
 
     async def request(
         self, *, afisha_id=None, params=None, method="GET", body=None, token=None

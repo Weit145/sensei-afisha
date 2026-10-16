@@ -22,7 +22,7 @@ class MessageModel(Base):
 
     afisha_id: Mapped[uuid.UUID] = mapped_column(
         Uuid(as_uuid=True),
-        ForeignKey("afisha.id", ondelete="RESTRICT"),
+        ForeignKey("afisha.id", ondelete="CASCADE"),
         nullable=False,
     )
     author_id: Mapped[uuid.UUID] = mapped_column(

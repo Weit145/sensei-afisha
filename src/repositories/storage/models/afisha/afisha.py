@@ -98,6 +98,8 @@ class AfishaModel(Base):
 
     messages: Mapped[list["MessageModel"]] = relationship(
         back_populates="afisha",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     followers: Mapped[list["UserModel"]] = relationship(
