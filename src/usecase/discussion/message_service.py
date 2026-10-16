@@ -37,7 +37,9 @@ class MessageService:
         if not await self.repo.author_exists(author_id, session):
             raise UnauthorizedError("Token user no longer exists")
 
-    async def create_message(self, message: Message, session: AsyncSession) -> Message:
+    async def create_message(
+        self, message: Message, session: AsyncSession, nickname: str
+    ) -> Message:
         await self._require_author(message.author_id, session)
         await self._require_afisha(message.afisha_id, session)
         try:
@@ -52,7 +54,7 @@ class MessageService:
         if self.notifier is not None:
             try:
                 await self.notifier.SendAboutNewDescussionMessages(
-                    created.afisha_id, created.text, created.author_id
+                    created.afisha_id, created.text, created.author_id, nickname
                 )
             except Exception:
                 # The message is already committed; a failed notification must not

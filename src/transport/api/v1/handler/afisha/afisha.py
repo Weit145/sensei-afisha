@@ -30,7 +30,11 @@ from src.transport.api.v1.map.afisha import (
     map_afisha_to_update_domain as map_to_update_domain,
 )
 from src.transport.api.v1.map.err import map_error_to_http_status_code
-from src.transport.api.v1.middleware.user_check import CurrentUser, require_admin
+from src.transport.api.v1.middleware.user_check import (
+    CurrentUser,
+    CurrentUserDep,
+    require_admin,
+)
 from src.transport.api.v1.schemas.afisha import (
     AfishaListResponse,
     CreateAfisha,
@@ -40,6 +44,38 @@ from src.transport.api.v1.schemas.afisha import (
 from src.usecase.afisha.afisha_service import afisha_service
 
 router = APIRouter(prefix="/afisha", tags=["Afisha"])
+
+
+@router.post(
+    "/{afisha_id}/follow",
+    status_code=status.HTTP_204_NO_CONTENT,
+    description="Добавляет текущему пользователю отметку «Хочу пойти». Повторный запрос ничего не меняет.",
+)
+async def follow_afisha(
+    afisha_id: Annotated[uuid.UUID, Path(title="The ID afisha")],
+    current_user: CurrentUserDep,
+    session: Annotated[AsyncSession, Depends(db_helper.get_session)],
+) -> None:
+    try:
+        await afisha_service.follow_afisha(afisha_id, current_user.user_id, session)
+    except DomainError as error:
+        map_error_to_http_status_code(error)
+
+
+@router.delete(
+    "/{afisha_id}/follow",
+    status_code=status.HTTP_204_NO_CONTENT,
+    description="Удаляет отметку «Хочу пойти» текущего пользователя. Повторный запрос ничего не меняет.",
+)
+async def unfollow_afisha(
+    afisha_id: Annotated[uuid.UUID, Path(title="The ID afisha")],
+    current_user: CurrentUserDep,
+    session: Annotated[AsyncSession, Depends(db_helper.get_session)],
+) -> None:
+    try:
+        await afisha_service.unfollow_afisha(afisha_id, current_user.user_id, session)
+    except DomainError as error:
+        map_error_to_http_status_code(error)
 
 @router.post(
     path="",

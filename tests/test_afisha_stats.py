@@ -128,6 +128,25 @@ class AfishaStatsTests(unittest.IsolatedAsyncioTestCase):
                     afisha_id=uuid4(), session=session
                 )
 
+    async def test_follow_endpoints_storage_is_idempotent(self):
+        afisha_id = self.afishas[1]
+        user_id = self.users[1]
+        async with self.factory() as session:
+            await afisha_service.follow_afisha(afisha_id, user_id, session)
+            self.assertEqual(await self.count(afisha_id), 1)
+            await afisha_service.follow_afisha(afisha_id, user_id, session)
+            self.assertEqual(await self.count(afisha_id), 1)
+
+            await afisha_service.unfollow_afisha(afisha_id, user_id, session)
+            self.assertEqual(await self.count(afisha_id), 0)
+            await afisha_service.unfollow_afisha(afisha_id, user_id, session)
+            self.assertEqual(await self.count(afisha_id), 0)
+
+            with self.assertRaises(NotFoundError):
+                await afisha_service.follow_afisha(uuid4(), user_id, session)
+            with self.assertRaises(NotFoundError):
+                await afisha_service.unfollow_afisha(uuid4(), user_id, session)
+
     async def test_afisha_responses_include_followers_count(self):
         venue_id = uuid4()
         now = datetime.now(UTC)

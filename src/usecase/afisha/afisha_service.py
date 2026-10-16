@@ -52,6 +52,26 @@ class AfishaService:
         self.event = event
         self.afisha_stats_repo = afisha_stats_repo
 
+    async def follow_afisha(
+        self, afisha_id: uuid.UUID, user_id: uuid.UUID, session: AsyncSession
+    ) -> None:
+        try:
+            await self.afish_repo.follow_afisha(session, afisha_id, user_id)
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+
+    async def unfollow_afisha(
+        self, afisha_id: uuid.UUID, user_id: uuid.UUID, session: AsyncSession
+    ) -> None:
+        try:
+            await self.afish_repo.unfollow_afisha(session, afisha_id, user_id)
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+
     async def create_afisha(
         self,
         afisha: Afisha,

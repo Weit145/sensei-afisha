@@ -1,5 +1,4 @@
 import logging
-
 import uuid
 from typing import Annotated
 
@@ -26,8 +25,8 @@ from src.transport.api.v1.schemas.reviews.reviews import (
     ReviewStatsResponse,
     UpdateReviewRequest,
 )
-from src.usecase.reviews.reviews_service import ReviewsService
 from src.usecase.notification_service import notification_service
+from src.usecase.reviews.reviews_service import ReviewsService
 
 logger = logging.getLogger(__name__)
 
@@ -146,6 +145,7 @@ async def create_review(
             afisha_id=afisha_id,
             text=review.text,
             user_id=current_user.user_id,
+            nickname=current_user.username,
         )
     except Exception:
         logger.exception(
@@ -204,4 +204,3 @@ async def delete_review(
     except DomainError as error:
         await session.rollback()
         map_error_to_http_status_code(error)
-

@@ -1,15 +1,53 @@
 import uuid
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import delete, func, or_, select
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from src.domain.afisha import AfishaUpdate
 from src.domain.err import InvalidDataError, NotFoundError
 from src.repositories.storage.models.afisha import AfishaModel, VenueModel
+from src.repositories.storage.models.user import user_afisha_follows
 
 
 class SQLAlchemyAfishaRepository:
+    async def follow_afisha(
+        self,
+        session: AsyncSession,
+        afisha_id: uuid.UUID,
+        user_id: uuid.UUID,
+    ) -> None:
+        await self._ensure_exists(session, afisha_id)
+        await session.execute(
+            insert(user_afisha_follows)
+            .values(user_id=user_id, afisha_id=afisha_id)
+            .on_conflict_do_nothing()
+        )
+
+    async def unfollow_afisha(
+        self,
+        session: AsyncSession,
+        afisha_id: uuid.UUID,
+        user_id: uuid.UUID,
+    ) -> None:
+        await self._ensure_exists(session, afisha_id)
+        await session.execute(
+            delete(user_afisha_follows).where(
+                user_afisha_follows.c.user_id == user_id,
+                user_afisha_follows.c.afisha_id == afisha_id,
+            )
+        )
+
+    async def _ensure_exists(
+        self, session: AsyncSession, afisha_id: uuid.UUID
+    ) -> None:
+        exists = await session.scalar(
+            select(AfishaModel.id).where(AfishaModel.id == afisha_id)
+        )
+        if exists is None:
+            raise NotFoundError("Afisha not found")
+
     async def create_afisha(
         self,
         session: AsyncSession,

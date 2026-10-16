@@ -89,7 +89,9 @@ async def create_message(
 ) -> MessageResponse:
     try:
         result = await message_service.create_message(
-            map_to_domain(data, afisha_id, current_user.user_id), session
+            map_to_domain(data, afisha_id, current_user.user_id),
+            session,
+            current_user.username,
         )
     except DomainError as error:
         map_error_to_http_status_code(error)

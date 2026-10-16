@@ -104,10 +104,15 @@ class NotificationService:
         self._enter_room(connection_id, MAIN_MENU_ID)
         await self.repo.update_afisha_id(connection_id, MAIN_MENU_ID)
 
-    async def SendAboutNewEvents(self, connection_id: str, text: str, user_id) -> None:
+    async def SendAboutNewEvents(
+        self, connection_id: str, text: str, user_id: uuid.UUID, nickname: str
+    ) -> None:
         """Собирает Notification о новом событии и шлёт конкретному соединению."""
         notification = Notification(
-            n_type=NotificationType.MAIN_MENU, text=text, user_id=str(user_id)
+            n_type=NotificationType.MAIN_MENU,
+            text=text,
+            user_id=str(user_id),
+            nickname=nickname,
         )
         payload = notification.dump_to_json()
         ws = self.local.get(connection_id)
@@ -119,11 +124,14 @@ class NotificationService:
             await self.repo.publish_to_server(info.server_id, payload)
 
     async def SendAboutNewDescussionMessages(
-        self, afisha_id: uuid.UUID, text: str, user_id: uuid.UUID
+        self, afisha_id: uuid.UUID, text: str, user_id: uuid.UUID, nickname: str
     ) -> None:
         """Собирает Notification о новом сообщении в обсуждении и шлёт всем в комнате."""
         notification = Notification(
-            n_type=NotificationType.DISCUSSION, text=text, user_id=str(user_id)
+            n_type=NotificationType.DISCUSSION,
+            text=text,
+            user_id=str(user_id),
+            nickname=nickname,
         )
         payload = notification.dump_to_json()
         connection_ids = list(self.rooms.get(afisha_id, set()))
@@ -134,11 +142,14 @@ class NotificationService:
                 await self._safe_send(ws, payload, connection_id)
 
     async def SendAboutNewFeedBack(
-        self, afisha_id: uuid.UUID, text: str, user_id
+        self, afisha_id: uuid.UUID, text: str, user_id: uuid.UUID, nickname: str
     ) -> None:
         """Собирает Notification об отзыве и шлёт всем в комнате."""
         notification = Notification(
-            n_type=NotificationType.DISCUSSION, text=text, user_id=str(user_id)
+            n_type=NotificationType.DISCUSSION,
+            text=text,
+            user_id=str(user_id),
+            nickname=nickname,
         )
         payload = notification.dump_to_json()
         connection_ids = list(self.rooms.get(afisha_id, set()))

@@ -16,6 +16,7 @@ class Notification:
     n_type: NotificationType = field(default=NotificationType.MAIN_MENU)
     text: str = field(default="")
     user_id: str = field(default="")
+    nickname: str = field(default="")
 
     def dump_to_json(self) -> str:
         """Сериализует уведомление в JSON-строку."""

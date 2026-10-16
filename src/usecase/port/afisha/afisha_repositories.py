@@ -8,6 +8,16 @@ from src.repositories.storage.models.afisha import AfishaModel
 
 
 class AfishaRepository(Protocol):
+    async def follow_afisha(
+        self, session: AsyncSession, afisha_id: uuid.UUID, user_id: uuid.UUID
+    ) -> None:
+        ...
+
+    async def unfollow_afisha(
+        self, session: AsyncSession, afisha_id: uuid.UUID, user_id: uuid.UUID
+    ) -> None:
+        ...
+
     async def create_afisha(
         self,
         session: AsyncSession,

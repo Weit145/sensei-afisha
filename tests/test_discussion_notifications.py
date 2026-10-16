@@ -44,28 +44,33 @@ class MessageNotificationTests(unittest.IsolatedAsyncioTestCase):
         self.service = MessageService(self.repo, self.notifier)
 
     async def test_publishes_only_after_commit_with_saved_fields(self):
-        async def publish(afisha_id, text, user_id):
+        async def publish(afisha_id, text, user_id, nickname):
             self.repo.commit.assert_awaited_once_with(self.session)
             self.assertEqual(
-                (afisha_id, text, user_id),
-                (self.message.afisha_id, self.message.text, self.message.author_id),
+                (afisha_id, text, user_id, nickname),
+                (
+                    self.message.afisha_id,
+                    self.message.text,
+                    self.message.author_id,
+                    "author",
+                ),
             )
 
         self.notifier.SendAboutNewDescussionMessages.side_effect = publish
-        result = await self.service.create_message(self.message, self.session)
+        result = await self.service.create_message(self.message, self.session, "author")
         self.assertEqual(result, self.message)
         self.notifier.SendAboutNewDescussionMessages.assert_awaited_once()
 
     async def test_failed_commit_does_not_publish(self):
         self.repo.commit.side_effect = RuntimeError("Database unavailable")
         with self.assertRaises(RuntimeError):
-            await self.service.create_message(self.message, self.session)
+            await self.service.create_message(self.message, self.session, "author")
         self.notifier.SendAboutNewDescussionMessages.assert_not_awaited()
 
     async def test_rejected_author_does_not_publish(self):
         self.repo.author_exists.return_value = False
         with self.assertRaises(UnauthorizedError):
-            await self.service.create_message(self.message, self.session)
+            await self.service.create_message(self.message, self.session, "author")
         self.notifier.SendAboutNewDescussionMessages.assert_not_awaited()
 
     async def test_publish_failure_keeps_successful_result(self):
@@ -73,7 +78,7 @@ class MessageNotificationTests(unittest.IsolatedAsyncioTestCase):
             "Socket failed"
         )
         with self.assertLogs("src.usecase.discussion.message_service", level="ERROR"):
-            result = await self.service.create_message(self.message, self.session)
+            result = await self.service.create_message(self.message, self.session, "author")
         self.assertEqual(result, self.message)
         self.repo.commit.assert_awaited_once_with(self.session)
         self.session.rollback.assert_not_awaited()
@@ -129,10 +134,28 @@ class NotificationConnectionTests(unittest.IsolatedAsyncioTestCase):
         await service.Subscribe(second, concert_id)
         broken.send_text.side_effect = RuntimeError("Disconnected")
         with self.assertLogs("NotificationService", level="ERROR"):
-            await service.SendAboutNewDescussionMessages(concert_id, "Hello", uuid4())
+            await service.SendAboutNewDescussionMessages(
+                concert_id, "Hello", uuid4(), "author"
+            )
         healthy.send_text.assert_awaited_once()
         self.assertNotIn(first, service.local)
         self.assertEqual(service.rooms[concert_id], {second})
+
+    async def test_feedback_notification_includes_user_id_and_nickname(self):
+        repo = AsyncMock(spec=RedisNotificationRepository)
+        service = NotificationService(repo, 0)
+        socket = AsyncMock()
+        connection_id = await service.Connect(socket, "127.0.0.1")
+        concert_id, author_id = uuid4(), uuid4()
+        await service.Subscribe(connection_id, concert_id)
+
+        await service.SendAboutNewFeedBack(
+            concert_id, "Отличный концерт", author_id, "listener_1"
+        )
+
+        payload = json.loads(socket.send_text.await_args.args[0])
+        self.assertEqual(payload["user_id"], str(author_id))
+        self.assertEqual(payload["nickname"], "listener_1")
 
 
 class ASGISocket:
@@ -239,6 +262,7 @@ class DiscussionWebSocketTests(unittest.IsolatedAsyncioTestCase):
             "n_type": 2,
             "text": "Привет всем",
             "user_id": str(self.fixture.author_id),
+            "nickname": "pagination-test",
         }
         self.assertEqual(await first.receive_json(), expected)
         self.assertEqual(await second.receive_json(), expected)
