@@ -58,7 +58,7 @@ async def create_afisha(
         str,
         Form(description="JSON с данными афиши (поля CreateAfisha)"),
     ],
-    # _:Annotated[CurrentUser, Depends(require_admin)],
+    _:Annotated[CurrentUser, Depends(require_admin)],
     session: Annotated[AsyncSession, Depends(db_helper.get_session)],
 )->ResponseAfisha:
     try:
@@ -83,7 +83,7 @@ async def create_afisha(
 )
 async def update_afisha(
     afisha:CreateAfisha,
-    # _:Annotated[CurrentUser, Depends(require_admin)],
+    _:Annotated[CurrentUser, Depends(require_admin)],
     afisha_id: Annotated[uuid.UUID, Path(title="The ID afisha")],
     session: Annotated[AsyncSession, Depends(db_helper.get_session)],
 )->ResponseAfisha:
@@ -102,7 +102,7 @@ async def update_afisha(
 )
 async def patch_afisha(
     afisha:UpdateAfisha,
-    # _:Annotated[CurrentUser, Depends(require_admin)],
+    _:Annotated[CurrentUser, Depends(require_admin)],
     afisha_id: Annotated[uuid.UUID, Path(title="The ID afisha")],
     session: Annotated[AsyncSession, Depends(db_helper.get_session)],
 )->ResponseAfisha:
@@ -119,7 +119,7 @@ async def patch_afisha(
     description="Удаляет афишу и связанные с ней изображения.",
 )
 async def delete_afisha(
-    # _:Annotated[CurrentUser, Depends(require_admin)],
+    _:Annotated[CurrentUser, Depends(require_admin)],
     afisha_id: Annotated[uuid.UUID, Path(title="The ID afisha")],
     session: Annotated[AsyncSession, Depends(db_helper.get_session)],
 )->None:

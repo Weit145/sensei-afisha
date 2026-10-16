@@ -1,9 +1,8 @@
 import uuid
 from datetime import datetime
-
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 from typing import Annotated
 
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
 ReviewText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 

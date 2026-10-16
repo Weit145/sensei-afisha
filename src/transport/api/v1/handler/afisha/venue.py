@@ -44,7 +44,7 @@ router = APIRouter(prefix="/venues", tags=["Venue"])
 )
 async def create_venue(
     venue: CreateVenue,
-    # _:Annotated[CurrentUser, Depends(require_admin)],
+    _:Annotated[CurrentUser, Depends(require_admin)],
     session: Annotated[AsyncSession, Depends(db_helper.get_session)],
 )->ResponseVenue:
     try:
@@ -62,7 +62,7 @@ async def create_venue(
 )
 async def update_venue(
     venue:CreateVenue,
-    # _:Annotated[CurrentUser, Depends(require_admin)],
+    _:Annotated[CurrentUser, Depends(require_admin)],
     venue_id: Annotated[uuid.UUID, Path(title="The ID venue")],
     session: Annotated[AsyncSession, Depends(db_helper.get_session)],
 )->ResponseVenue:
@@ -80,7 +80,7 @@ async def update_venue(
 )
 async def patch_venue(
     venue:UpdateVenue,
-    # _:Annotated[CurrentUser, Depends(require_admin)],
+    _:Annotated[CurrentUser, Depends(require_admin)],
     venue_id: Annotated[uuid.UUID, Path(title="The ID venue")],
     session: Annotated[AsyncSession, Depends(db_helper.get_session)],
 )->ResponseVenue:
@@ -97,7 +97,7 @@ async def patch_venue(
     description="Удаляет площадку по её идентификатору.",
 )
 async def delete_venue(
-    # _:Annotated[CurrentUser, Depends(require_admin)],
+    _:Annotated[CurrentUser, Depends(require_admin)],
     venue_id: Annotated[uuid.UUID, Path(title="The ID venue")],
     session: Annotated[AsyncSession, Depends(db_helper.get_session)],
 )->None:

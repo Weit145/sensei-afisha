@@ -1,5 +1,5 @@
 import uuid
-from datetime import timezone
+from datetime import UTC
 
 from src.domain.afisha.afisha import AfishaStatus
 from src.domain.base import utc_now
@@ -40,7 +40,7 @@ class ReviewsService:
             raise InvalidDataError("Для отменённого мероприятия отзывы недоступны")
         if info.ends_at.tzinfo is None or info.ends_at.utcoffset() is None:
             raise InvalidDataError("Дата окончания афиши должна содержать часовой пояс")
-        if info.ends_at.astimezone(timezone.utc) > utc_now():
+        if info.ends_at.astimezone(UTC) > utc_now():
             raise InvalidDataError("Оставить отзыв можно после окончания мероприятия")
 
     async def get_stats_by_afisha_ids(

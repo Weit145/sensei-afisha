@@ -1,4 +1,6 @@
-.PHONY: up down logs migrate revision delete
+SEED_API_URL ?= http://127.0.0.1:8080
+
+.PHONY: up down logs migrate revision delete seed-examples
 
 up:
 	docker compose up --build -d
@@ -11,6 +13,9 @@ logs:
 
 migrate:
 	docker compose run --rm migrate
+
+seed-examples:
+	python3 scripts/seed_examples.py --base-url "$(SEED_API_URL)"
 
 revision:
 	@test -n "$(MESSAGE)" || (echo 'Usage: make revision MESSAGE="description"' >&2; exit 1)

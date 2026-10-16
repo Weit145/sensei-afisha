@@ -21,6 +21,7 @@ class Afisha(Entity):
     starts_at: datetime
     ends_at: datetime
 
+
     venue_ids: list[uuid.UUID]
 
     age_limit: int | None = None
