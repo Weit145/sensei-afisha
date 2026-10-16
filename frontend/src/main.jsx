@@ -3,13 +3,10 @@ import { createRoot } from 'react-dom/client';
 import AuthModal from './AuthModal.jsx';
 import Home from './pages/Home.jsx';
 import Concert from './pages/Concert.jsx';
-import Club from './pages/Club.jsx';
 import { Icon, Link } from './components.jsx';
 import { parseAccessKey, readStored, writeStored } from './utils.js';
-import { DEMO } from './api.js';
 import './styles.css';
 
-const PLANS_KEY = 'musical-monday:plans:v1';
 const SESSION_KEY = 'musical-monday:session:v1';
 
 function App() {
@@ -19,61 +16,70 @@ function App() {
     const saved = readStored(SESSION_KEY, null, 'sessionStorage');
     return saved?.token ? parseAccessKey(saved.token) : null;
   });
-  const [plans, setPlans] = useState(() => {
-    const saved = readStored(PLANS_KEY, []);
-    return Array.isArray(saved) ? saved.filter(id => typeof id === 'string') : [];
-  });
   const [toast, setToast] = useState('');
   const notify = useCallback(message => setToast(message), []);
   const openAuth = useCallback(() => setShowAuth(true), []);
   const closeAuth = useCallback(() => setShowAuth(false), []);
+  const disconnect = useCallback(() => {
+    setSession(null);
+    writeStored(SESSION_KEY, null, 'sessionStorage');
+  }, []);
   const connect = useCallback(value => {
-    if (!writeStored(SESSION_KEY, value, 'sessionStorage')) notify('Ключ подключён только до обновления страницы: хранилище браузера недоступно.');
-    else notify('Ключ доступа подключён. Теперь можно отправить сообщение.');
+    const stored = writeStored(SESSION_KEY, value, 'sessionStorage');
     setSession(value);
+    notify(stored ? 'Ключ подключён. Можно отправлять сообщения и оставлять отзывы.' : 'Ключ подключён до обновления страницы: хранилище браузера недоступно.');
   }, [notify]);
-  const disconnect = useCallback(() => { setSession(null); writeStored(SESSION_KEY, null, 'sessionStorage'); }, []);
 
   useEffect(() => {
     const navigate = () => setPath(location.pathname);
-    const expired = () => { disconnect(); notify('Срок действия ключа истёк. Подключитесь заново, чтобы отправлять сообщения.'); };
+    const expired = () => { disconnect(); notify('Для отправки сообщений и отзывов войдите снова.'); };
     window.addEventListener('popstate', navigate);
     window.addEventListener('session-expired', expired);
-    return () => { window.removeEventListener('popstate', navigate); window.removeEventListener('session-expired', expired); };
+    return () => {
+      window.removeEventListener('popstate', navigate);
+      window.removeEventListener('session-expired', expired);
+    };
   }, [disconnect, notify]);
+
   useEffect(() => {
     if (!session) return;
-    const timer = setTimeout(() => { disconnect(); notify('Срок действия ключа истёк.'); }, Math.min(session.expiresAt - Date.now(), 2147483647));
-    return () => clearTimeout(timer);
+    const checkExpiration = () => {
+      if (session.expiresAt <= Date.now()) { disconnect(); notify('Срок действия ключа истёк.'); }
+    };
+    const timer = setInterval(checkExpiration, 1000);
+    checkExpiration();
+    return () => clearInterval(timer);
   }, [session, disconnect, notify]);
-  useEffect(() => { if (!toast) return; const timer = setTimeout(() => setToast(''), 5500); return () => clearTimeout(timer); }, [toast]);
-  useEffect(() => {
-    const sync = event => { if (event.key === PLANS_KEY) { const value = readStored(PLANS_KEY, []); if (Array.isArray(value)) setPlans(value.filter(id => typeof id === 'string')); } };
-    window.addEventListener('storage', sync);
-    return () => window.removeEventListener('storage', sync);
-  }, []);
 
-  function togglePlan(id) {
-    const next = plans.includes(id) ? plans.filter(value => value !== id) : [...plans, id];
-    const saved = writeStored(PLANS_KEY, next);
-    setPlans(next);
-    notify(saved ? next.includes(id) ? 'Концерт в ваших планах. Сохранено на этом устройстве.' : 'Концерт убран из ваших планов.' : 'Хранилище браузера недоступно. План сохранён до обновления страницы.');
-  }
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(''), 5500);
+    return () => clearTimeout(timer);
+  }, [toast]);
 
   const detail = path.match(/^\/concert\/([^/]+)\/?$/);
-  const common = { plans, togglePlan, session, openAuth, notify };
   return <>
     <a className="skip-link" href="#main">Перейти к содержанию</a>
-    {DEMO && <div className="demo-banner" role="status">Режим просмотра <span>· Демонстрационные концерты. Отправка сообщений и регистрация отключены.</span></div>}
-    <header className="site-header"><div className="header-inner">
-      <Link to="/" className="brand" aria-label="Музыкальный понедельник — на главную"><span className="brand-mark">м<span>п</span><i /></span><span>музыкальный<br />понедельник</span></Link>
-      <nav aria-label="Основная навигация"><Link to="/" className={path === '/' || detail ? 'active' : ''}>Афиша</Link><Link to="/plans" className={path === '/plans' ? 'active' : ''}>Мои планы{plans.length > 0 && <span className="nav-count">{plans.length}</span>}</Link><Link to="/club" className={path === '/club' ? 'active' : ''}>О клубе</Link></nav>
-      {session ? <button className="login-button" onClick={() => { disconnect(); notify('Вы вышли из клуба.'); }}><Icon name="logout" size={17} /><span>Выйти</span></button> : <button className="login-button" onClick={openAuth}><Icon name="user" size={17} /><span>Войти в клуб</span><Icon name="arrow" size={17} /></button>}
-    </div></header>
+    <header className="site-header">
+      <div className="header-inner">
+        <Link to="/" className="brand" aria-label="Музыкальный понедельник — на главную">
+          <span className="brand-mark" aria-hidden="true">м<span>п</span><i /></span>
+          <span>музыкальный<br />понедельник</span>
+        </Link>
+        <Link to="/" className="header-afisha" aria-current={path === '/' ? 'page' : undefined}>Афиша клуба</Link>
+        {session
+          ? <button className="login-button" onClick={() => { disconnect(); notify('Вы вышли из клуба.'); }}><Icon name="logout" size={17} />Выйти</button>
+          : <button className="login-button" onClick={openAuth}><Icon name="user" size={17} />Войти в клуб<Icon name="arrow" size={17} /></button>}
+      </div>
+    </header>
     <main id="main" tabIndex={-1}>
-      {detail ? <Concert key={detail[1]} id={detail[1]} {...common} /> : path === '/' || path === '/plans' ? <Home key={path} onlyPlans={path === '/plans'} {...common} /> : path === '/club' ? <Club openAuth={openAuth} /> : <div className="not-found container"><span className="eyebrow">404 · ПАУЗА МЕЖДУ ЧАСТЯМИ</span><h1>Кажется, здесь тишина.</h1><p>Такой страницы нет. Но в афише наверняка найдётся что послушать.</p><Link to="/" className="button">Вернуться к афише<Icon name="arrow" /></Link></div>}
+      {detail
+        ? <Concert key={detail[1]} id={detail[1]} session={session} openAuth={openAuth} notify={notify} />
+        : path === '/'
+          ? <Home />
+          : <div className="container not-found"><span className="eyebrow">404</span><h1>Страница не найдена</h1><Link to="/" className="button">Вернуться к афише<Icon name="arrow" /></Link></div>}
     </main>
-    <footer className="site-footer container"><Link to="/" className="footer-name">Музыкальный понедельник<span>Клуб слушателей</span></Link><p>Музыка заканчивается.<br />Разговор продолжается.</p><Link to="/club">О нашем клубе<Icon name="arrow" size={16} /></Link><span className="footer-year">{new Date().getFullYear()}</span></footer>
+    <footer className="site-footer container"><Link to="/">Музыкальный понедельник</Link><span>Клуб слушателей · Георгиевский зал</span></footer>
     {showAuth && <AuthModal onClose={closeAuth} onConnect={connect} />}
     {toast && <div className="toast" role="status"><Icon name="note" size={18} /><span>{toast}</span><button aria-label="Закрыть уведомление" onClick={() => setToast('')}><Icon name="close" size={16} /></button></div>}
   </>;

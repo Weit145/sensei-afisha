@@ -1,10 +1,10 @@
 import { useCallback, useState } from 'react';
-import { api, DEMO } from './api.js';
+import { api } from './api.js';
 import { Icon, Modal } from './components.jsx';
 import { parseAccessKey } from './utils.js';
 
 export default function AuthModal({ onClose, onConnect }) {
-  const [tab, setTab] = useState('join');
+  const [tab, setTab] = useState('login');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [token, setToken] = useState('');
@@ -28,14 +28,12 @@ export default function AuthModal({ onClose, onConnect }) {
     onConnect(session); onClose();
   }
 
-  if (DEMO) return <Modal title="Знакомьтесь с клубом." onClose={close}><p className="modal-intro">Сейчас открыт режим просмотра с демонстрационными концертами. Регистрация и отправка сообщений доступны при обычном запуске с подключённым сервером.</p><button className="button" onClick={close}>Продолжить знакомство<Icon name="arrow" /></button></Modal>;
-
-  return <Modal title={created ? 'Вы в списке гостей.' : 'Хорошая музыка объединяет.'} onClose={close}>
+  return <Modal title={created ? 'Аккаунт создан' : 'Вход в клуб'} onClose={close}>
     {created ? <div className="registration-success"><span className="empty-icon"><Icon name="check" size={30} /></span><p>Аккаунт <strong>{username.trim().toLowerCase()}</strong> создан.</p><p className="muted">Вход по паролю пока недоступен. Если организаторы выдали вам ключ доступа, его можно подключить во вкладке «Войти».</p><button className="button" onClick={() => { setCreated(false); setTab('login'); }}>Ко входу<Icon name="arrow" /></button></div> : <>
-      <p className="modal-intro">Сохраняйте встречи с музыкой и продолжайте разговор после последнего аккорда.</p>
-      <div className="auth-tabs" role="tablist" aria-label="Способ подключения">
-        <button role="tab" aria-selected={tab === 'join'} onClick={() => { setTab('join'); setError(''); }} disabled={busy}>Регистрация</button>
-        <button role="tab" aria-selected={tab === 'login'} onClick={() => { setTab('login'); setError(''); }} disabled={busy}>Войти</button>
+      <p className="modal-intro">Войдите, чтобы обсуждать концерты и делиться впечатлениями.</p>
+      <div className="auth-tabs" role="group" aria-label="Способ подключения">
+        <button aria-pressed={tab === 'login'} onClick={() => { setTab('login'); setError(''); }} disabled={busy}>Вход по ключу</button>
+        <button aria-pressed={tab === 'join'} onClick={() => { setTab('join'); setError(''); }} disabled={busy}>Регистрация</button>
       </div>
       {tab === 'join' ? <form onSubmit={register} className="form-stack">
         <label>Имя пользователя<input value={username} onChange={event => setUsername(event.target.value)} placeholder="Например, music_lover" autoComplete="username" required minLength={3} maxLength={30} pattern="[A-Za-z0-9_]+" disabled={busy} aria-describedby="username-hint" /></label>

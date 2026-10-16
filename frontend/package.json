@@ -6,7 +6,6 @@
   "packageManager": "npm@11.20.0",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "dev:demo": "vite --host 127.0.0.1 --mode demo",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
     "test": "node --test tests/*.test.js"
