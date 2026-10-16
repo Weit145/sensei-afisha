@@ -25,9 +25,9 @@ from src.repositories.storage.postgres.afisha import (
 )
 from src.repositories.storage.postgres.reviews_repository import AfishaReviewsRepository
 from src.usecase.afisha.dto import AfishaDetailResult, AfishaListResult
+from src.usecase.notification_service import NotificationService, notification_service
 from src.usecase.port.afisha import AfishaRepository, ImgInfastructure, ImgRepository
 from src.usecase.port.notifier import Notifier
-from src.usecase.notification_service import NotificationService, notification_service
 
 logger = logging.getLogger(__name__)
 

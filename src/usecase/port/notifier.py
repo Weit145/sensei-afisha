@@ -1,12 +1,14 @@
+import uuid
 from typing import Protocol
 
 from fastapi import WebSocket
-import uuid
+
 from src.repositories.storage.models.connectioninfo import (
     MAIN_MENU_ID,
     ConnectionInfo,
     NotificationType,
 )
+
 
 class Notifier(Protocol):
     async def Connect(self, ws: WebSocket, user_ip: str, n_type: NotificationType = NotificationType.MAIN_MENU) -> str | None:...

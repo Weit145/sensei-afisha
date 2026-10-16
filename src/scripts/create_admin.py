@@ -1,4 +1,5 @@
 import asyncio
+import secrets
 
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
@@ -44,14 +45,23 @@ async def create_admin(session: AsyncSession, password: str | None) -> bool:
 
 async def main() -> None:
     try:
-        password = (
+        configured_password = (
             settings.admin_password.get_secret_value()
             if settings.admin_password is not None
             else None
         )
+        generated_password = None
+        if configured_password is None or not configured_password.strip():
+            generated_password = secrets.token_urlsafe(32)
+        password = generated_password or configured_password
         async with db_helper.session_factory() as session:
             created = await create_admin(session, password)
         print("Admin account created" if created else "Admin account already exists")
+        if created and generated_password is not None:
+            print(
+                "Generated ADMIN_PASSWORD for admin (save it now): "
+                f"{generated_password}"
+            )
     finally:
         await db_helper.engine.dispose()
 

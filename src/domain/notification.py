@@ -1,6 +1,7 @@
-from dataclasses import dataclass, field, asdict
-from enum import Enum
 import json
+from dataclasses import asdict, dataclass, field
+from enum import Enum
+
 
 # нужно для задания типа сообщения
 class NotificationType(Enum):

@@ -29,7 +29,7 @@ router = APIRouter(prefix="/afisha", tags=["Images"])
 async def add_images(
     image: Annotated[UploadFile, File()],
     afisha_id: Annotated[uuid.UUID, Path(title="The ID afisha")],
-    # _:Annotated[CurrentUser, Depends(require_admin)],
+    _:Annotated[CurrentUser, Depends(require_admin)],
     session: Annotated[AsyncSession, Depends(db_helper.get_session)],
 ) -> UploadedImageResponse:
     try:
@@ -46,7 +46,7 @@ async def add_images(
 async def delete_image(
     afisha_id: Annotated[uuid.UUID, Path(title="The ID afisha")],
     image_id: Annotated[uuid.UUID, Path(title="The ID image")],
-    # _:Annotated[CurrentUser, Depends(require_admin)],
+    _:Annotated[CurrentUser, Depends(require_admin)],
     session: Annotated[AsyncSession, Depends(db_helper.get_session)],
 )->None:
     try:
@@ -62,7 +62,7 @@ async def delete_image(
 async def change_main_img(
     afisha_id: Annotated[uuid.UUID, Path(title="The ID afisha")],
     image_id: Annotated[uuid.UUID, Path(title="The ID image")],
-    # _:Annotated[CurrentUser, Depends(require_admin)],
+    _:Annotated[CurrentUser, Depends(require_admin)],
     session: Annotated[AsyncSession, Depends(db_helper.get_session)],
 )->None:
     try:
