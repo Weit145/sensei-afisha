@@ -3,7 +3,7 @@ import { api, connectDiscussion, DEMO } from './api.js';
 import { ErrorState, Icon } from './components.jsx';
 import { dateLong, dateShort, hash, initials, mergeMessages, participantName, time } from './utils.js';
 
-export default function Discussion({ id, session, openAuth }) {
+export default function Discussion({ id, session, openAuth, onContact }) {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
@@ -17,6 +17,7 @@ export default function Discussion({ id, session, openAuth }) {
   const [revision, setRevision] = useState(0);
   const listRef = useRef(null), messagesRef = useRef([]), snapshot = useRef(null), loadRef = useRef(null), controllerRef = useRef(null);
   const initialized = useRef(false);
+  const [participants, setParticipants] = useState({});
   useEffect(() => { setText(''); setActionError(''); }, [session?.id]);
 
   function remember(kind = 'latest') {
@@ -68,7 +69,7 @@ export default function Discussion({ id, session, openAuth }) {
     }
     loadRef.current = load;
     load();
-    const close = connectDiscussion(id, { onUpdate: load, onStatus: setConnection });
+    const close = connectDiscussion(id, { onUpdate: load, onStatus: setConnection, onParticipant: ({ user_id, nickname }) => setParticipants(old => ({ ...old, [user_id]: nickname })) });
     return () => { controller.abort(); close(); loadRef.current = null; };
   }, [id, revision]);
 
@@ -108,9 +109,9 @@ export default function Discussion({ id, session, openAuth }) {
         {cursor && <button className="earlier-button inline-button" onClick={earlier} disabled={olderBusy || sending}>{olderBusy ? 'Загружаем…' : 'Показать более ранние'}</button>}
         {!messages.length ? <div className="conversation-empty"><span className="conversation-drawing" aria-hidden="true"><Icon name="chat" size={44} /><span>♪</span></span><h3>Займите первое кресло.</h3><p>Самое время познакомиться<br />и договориться о встрече.</p></div> : messages.map((message, index) => {
           const own = message.author_id === session?.id;
-          const name = own ? 'Вы' : participantName(message.author_id);
+          const name = own ? 'Вы' : participants[message.author_id] || participantName(message.author_id);
           const dayChanged = index === 0 || dateLong(message.created_at) !== dateLong(messages[index - 1].created_at);
-          return <div key={message.id}>{dayChanged && <div className="chat-date">{dateShort(message.created_at)}</div>}<article className={`message ${own ? 'own-message' : ''}`}><span className={`avatar avatar-${hash(message.author_id) % 4}`} aria-hidden="true">{own ? 'ВЫ' : initials(name.split(' ')[1])}</span><div className="message-body"><div className="message-meta"><strong>{name}</strong><time dateTime={message.created_at}>{time(message.created_at)}</time></div><p>{message.text}</p></div></article></div>;
+          return <div key={message.id}>{dayChanged && <div className="chat-date">{dateShort(message.created_at)}</div>}<article className={`message ${own ? 'own-message' : ''}`}><span className={`avatar avatar-${hash(message.author_id) % 4}`} aria-hidden="true">{own ? 'ВЫ' : initials(participants[message.author_id] || name.split(' ')[1])}</span><div className="message-body"><div className="message-meta"><button className="author-contact" onClick={() => onContact(message.author_id)} aria-label={`Открыть контакты: ${own ? session.username : name}`}>{name}<Icon name="external" size={11} /></button><time dateTime={message.created_at}>{time(message.created_at)}</time></div><p>{message.text}</p></div></article></div>;
         })}
       </>}
     </div>

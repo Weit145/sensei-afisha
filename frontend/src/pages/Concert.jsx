@@ -3,6 +3,9 @@ import { api } from '../api.js';
 import { ErrorState, Icon, Link, Poster } from '../components.jsx';
 import Discussion from '../Discussion.jsx';
 import Reviews from '../Reviews.jsx';
+import ContactCard from '../ContactCard.jsx';
+import VenueMap from '../VenueMap.jsx';
+import { coordinates } from '../mapUtils.js';
 import { averageRating, dateLong, isPast, time, weekday } from '../utils.js';
 
 export default function Concert({ id, plans, togglePlan, session, openAuth, notify }) {
@@ -13,6 +16,8 @@ export default function Concert({ id, plans, togglePlan, session, openAuth, noti
   const [error, setError] = useState('');
   const [revision, setRevision] = useState(0);
   const planned = plans.includes(id);
+  const [contactUser, setContactUser] = useState(null);
+  const closeContact = useCallback(() => setContactUser(null), []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -45,7 +50,7 @@ export default function Concert({ id, plans, togglePlan, session, openAuth, noti
     <div className="detail-layout"><div className="concert-main">
       <section className="event-block" aria-label="О концерте"><Poster event={concert} featured /><div className="event-details">
         <div className="event-facts"><div><Icon name="calendar" size={21} /><span><strong>{dateLong(concert.starts_at)}</strong><small>{weekday(concert.starts_at)}</small></span></div><div><Icon name="clock" size={21} /><span><strong>{time(concert.starts_at)} — {time(concert.ends_at)}</strong><small>время московское</small></span></div><span className="age-badge">{concert.age_limit ?? 0}+</span></div>
-        {venues.map(venue => <div className="venue-fact" key={venue.id}><Icon name="pin" size={21} /><span><strong>{venue.name}</strong><small>{venue.city}, {venue.address}</small></span></div>)}
+        {venues.map(venue => <div className="venue-location" key={venue.id}><div className="venue-fact"><Icon name="pin" size={21} /><span><strong>{venue.name}</strong><small>{venue.city}, {venue.address}</small></span></div>{coordinates(venue.latitude, venue.longitude) && <VenueMap latitude={venue.latitude} longitude={venue.longitude} name={venue.name} />}</div>)}
         {venueError && <p className="muted small-text">Не удалось загрузить часть информации о площадке. <button className="inline-button" onClick={() => setRevision(value => value + 1)}>Повторить</button></p>}
         {cancelled && <div className="notice cancelled-notice">Концерт отменён. Обсуждение остаётся открытым.</div>}
         {!cancelled && past && <div className="notice">Этот концерт уже прошёл. Обсудите его с другими слушателями.</div>}
@@ -55,7 +60,8 @@ export default function Concert({ id, plans, togglePlan, session, openAuth, noti
         <div className="description-block"><h2>О концерте</h2>{concert.description ? concert.description.split(/\n\s*\n/).filter(Boolean).map((paragraph, i) => <p key={i}>{paragraph}</p>) : <p className="muted">Подробная программа пока не опубликована. Следите за обновлениями.</p>}</div>
         {concert.images?.length > 1 && <div className="extra-images">{concert.images.filter(image => image.id !== (concert.images.find(image => image.is_cover) || concert.images[0]).id).map(image => <Poster key={image.id} event={{ ...concert, images: [image] }} />)}</div>}
       </div></section>
-      <Reviews concert={concert} session={session} openAuth={openAuth} notify={notify} onStats={stats => setConcert(current => ({ ...current, rating_sum: stats.rating_sum, reviews_count: stats.reviews_count }))} />
-    </div><aside className="discussion-aside"><Discussion id={id} session={session} openAuth={openAuth} /><p className="discussion-footnote">Знакомьтесь, договаривайтесь о встрече<br />и будьте внимательны друг к другу.</p></aside></div>
+      <Reviews onContact={setContactUser} concert={concert} session={session} openAuth={openAuth} notify={notify} onStats={stats => setConcert(current => ({ ...current, rating_sum: stats.rating_sum, reviews_count: stats.reviews_count }))} />
+    </div><aside className="discussion-aside"><Discussion onContact={setContactUser} id={id} session={session} openAuth={openAuth} /><p className="discussion-footnote">Знакомьтесь, договаривайтесь о встрече<br />и будьте внимательны друг к другу.</p></aside></div>
+    {contactUser && <ContactCard key={`${contactUser}:${session?.id || 'guest'}`} userId={contactUser} session={session} openAuth={openAuth} onClose={closeContact} />}
   </div>;
 }

@@ -11,10 +11,10 @@ function socketFixture() {
     close() { this.closed = true; this.onclose?.(); }
     message(data) { this.onmessage?.({ data: JSON.stringify(data) }); }
   }
-  let updates = 0; const statuses = [];
-  const stop = connectDiscussion('concert-id', { url: 'ws://test/api/ws', WebSocketImpl: Socket, onUpdate: () => updates++, onStatus: value => statuses.push(value), schedule: (fn, delay) => { const id = ++next; timers.set(id, { fn, delay }); return id; }, cancel: id => timers.delete(id) });
+  let updates = 0; const statuses = [], participants = [];
+  const stop = connectDiscussion('concert-id', { url: 'ws://test/api/ws', WebSocketImpl: Socket, onUpdate: () => updates++, onParticipant: value => participants.push(value), onStatus: value => statuses.push(value), schedule: (fn, delay) => { const id = ++next; timers.set(id, { fn, delay }); return id; }, cancel: id => timers.delete(id) });
   const tick = delay => { const entry = [...timers].find(([, value]) => value.delay === delay); assert.ok(entry, `timer ${delay} exists`); timers.delete(entry[0]); entry[1].fn(); };
-  return { sockets, timers, tick, stop, statuses, get updates() { return updates; } };
+  return { sockets, timers, tick, stop, statuses, participants, get updates() { return updates; } };
 }
 
 test('socket subscribes, invalidates GET history, pings, and cleans up on leave', () => {
@@ -24,6 +24,8 @@ test('socket subscribes, invalidates GET history, pings, and cleans up on leave'
   socket.message({ type: 'subscribed', afisha_id: 'concert-id' }); assert.equal(f.updates, 1);
   socket.message({ n_type: 2, text: 'Notification text is never a message', user_id: 'u' }); assert.equal(f.updates, 2);
   socket.message({ n_type: 3 }); assert.equal(f.updates, 3);
+  socket.message({ n_type: 2, user_id: 'author', nickname: 'true_nickname', text: 'not a persisted message' });
+  assert.deepEqual(f.participants, [{ user_id: 'author', nickname: 'true_nickname' }]); assert.equal(f.updates, 4);
   f.tick(25000); assert.deepEqual(socket.sent.at(-1), { action: 'ping' });
   socket.message({ type: 'pong' }); assert.equal([...f.timers.values()].some(value => value.delay === 10000), false);
   f.stop(); assert.equal(socket.closed, true); assert.equal(f.timers.size, 0); assert.equal(socket.onmessage, null);

@@ -5,6 +5,7 @@ import Home from './pages/Home.jsx';
 import Concert from './pages/Concert.jsx';
 import Club from './pages/Club.jsx';
 import Admin from './pages/Admin.jsx';
+import Contacts from './pages/Contacts.jsx';
 import { Icon, Link } from './components.jsx';
 import { readStored, writeStored } from './utils.js';
 import { api, DEMO } from './api.js';
@@ -80,12 +81,12 @@ function App() {
     {DEMO && <div className="demo-banner" role="status">Режим просмотра <span>· Демонстрационные концерты. Отправка сообщений и регистрация отключены.</span></div>}
     <header className="site-header"><div className="header-inner">
       <Link to="/" className="brand" aria-label="Музыкальный понедельник — на главную"><span className="brand-mark">м<span>п</span><i /></span><span>музыкальный<br />понедельник</span></Link>
-      <nav aria-label="Основная навигация"><Link to="/" className={path === '/' || detail ? 'active' : ''}>Афиша</Link><Link to="/plans" className={path === '/plans' ? 'active' : ''}>Мои планы{plans.length > 0 && <span className="nav-count">{plans.length}</span>}</Link><Link to="/club" className={path === '/club' ? 'active' : ''}>О клубе</Link>{session?.role === 'admin' && <Link to="/admin" className={path === '/admin' ? 'active' : ''}>Редакция</Link>}</nav>
+      <nav aria-label="Основная навигация"><Link to="/" className={path === '/' || detail ? 'active' : ''}>Афиша</Link><Link to="/plans" className={path === '/plans' ? 'active' : ''}>Мои планы{plans.length > 0 && <span className="nav-count">{plans.length}</span>}</Link><Link to="/club" className={path === '/club' ? 'active' : ''}>О клубе</Link>{session && <Link to="/contacts" className={path === '/contacts' ? 'active' : ''}>Мои контакты</Link>}{session?.role === 'admin' && <Link to="/admin" className={path === '/admin' ? 'active' : ''}>Редакция</Link>}</nav>
       {session ? <button className="login-button" onClick={disconnect} disabled={loggingOut}><Icon name="logout" size={17} /><span>{loggingOut ? 'Выходим…' : `Выйти · ${session.username}`}</span></button> : <button className="login-button" onClick={openAuth} disabled={restoring}><Icon name="user" size={17} /><span>{restoring ? 'Проверяем вход…' : 'Войти в клуб'}</span><Icon name="arrow" size={17} /></button>}
     </div></header>
     {authError && <div className="session-notice container" role="alert"><span>{authError}</span><button className="inline-button" disabled={restoring || loggingOut} onClick={session ? disconnect : restore}>Повторить</button></div>}
     <main id="main" tabIndex={-1}>
-      {detail ? <Concert key={detail[1]} id={detail[1]} {...common} /> : path === '/' || path === '/plans' ? <Home key={path} onlyPlans={path === '/plans'} {...common} /> : path === '/club' ? <Club openAuth={openAuth} session={session} /> : path === '/admin' ? <Admin session={session} restoring={restoring} notify={notify} /> : <div className="not-found container"><span className="eyebrow">404 · ПАУЗА МЕЖДУ ЧАСТЯМИ</span><h1>Кажется, здесь тишина.</h1><p>Такой страницы нет. Но в афише наверняка найдётся что послушать.</p><Link to="/" className="button">Вернуться к афише<Icon name="arrow" /></Link></div>}
+      {detail ? <Concert key={detail[1]} id={detail[1]} {...common} /> : path === '/' || path === '/plans' ? <Home key={path} onlyPlans={path === '/plans'} {...common} /> : path === '/club' ? <Club openAuth={openAuth} session={session} /> : path === '/contacts' ? <Contacts session={session} restoring={restoring} openAuth={openAuth} /> : path === '/admin' ? <Admin session={session} restoring={restoring} notify={notify} /> : <div className="not-found container"><span className="eyebrow">404 · ПАУЗА МЕЖДУ ЧАСТЯМИ</span><h1>Кажется, здесь тишина.</h1><p>Такой страницы нет. Но в афише наверняка найдётся что послушать.</p><Link to="/" className="button">Вернуться к афише<Icon name="arrow" /></Link></div>}
     </main>
     <footer className="site-footer container"><Link to="/" className="footer-name">Музыкальный понедельник<span>Клуб слушателей</span></Link><p>Музыка заканчивается.<br />Разговор продолжается.</p><Link to="/club">О нашем клубе<Icon name="arrow" size={16} /></Link><span className="footer-year">{new Date().getFullYear()}</span></footer>
     {showAuth && <AuthModal onClose={closeAuth} onConnect={connect} />}

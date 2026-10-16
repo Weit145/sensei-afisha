@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, mediaUrl } from '../api.js';
 import { ErrorState, Icon, Link, Modal } from '../components.jsx';
 import { dateLong } from '../utils.js';
+import VenueMap from '../VenueMap.jsx';
 import { concertPayload, moscowInput, validateImages, venuePayload } from '../adminUtils.js';
 
 const emptyConcert = { title: '', short_description: '', description: '', starts_at: '', ends_at: '', venue_ids: [], age_limit: '0', status: 'published' };
@@ -75,6 +76,7 @@ function Editor({ kind, id, venues, venuesError, reloadVenues, onClose, onSaved,
             <label>Город<input required maxLength={100} value={form.city} onChange={event => change('city', event.target.value)} /></label>
             <label>Адрес<input required maxLength={500} value={form.address} onChange={event => change('address', event.target.value)} /></label>
             <div className="form-columns"><label>Широта · необязательно<input type="number" step="any" min={-90} max={90} value={form.latitude} onChange={event => change('latitude', event.target.value)} /></label><label>Долгота · необязательно<input type="number" step="any" min={-180} max={180} value={form.longitude} onChange={event => change('longitude', event.target.value)} /></label></div>
+            <VenueMap latitude={form.latitude} longitude={form.longitude} onChange={value => setForm(old => ({ ...old, ...value }))} query={[form.city, form.address || form.name].filter(Boolean).join(', ')} disabled={busy} />
           </>}
         </fieldset>
         {error && <p className="form-error" role="alert">{error}</p>}
