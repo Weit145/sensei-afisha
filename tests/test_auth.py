@@ -100,6 +100,7 @@ class AuthTests(unittest.IsolatedAsyncioTestCase):
         if origin is not None:
             request_headers["origin"] = origin
         request_headers.update(headers or {})
+        request_path = path if path.startswith("/api/") else "/api/auth/" + path
         messages = []
         sent = False
 
@@ -124,8 +125,8 @@ class AuthTests(unittest.IsolatedAsyncioTestCase):
                 "http_version": "1.1",
                 "method": method,
                 "scheme": "http",
-                "path": "/api/auth/" + path,
-                "raw_path": ("/api/auth/" + path).encode(),
+                "path": request_path,
+                "raw_path": request_path.encode(),
                 "root_path": "",
                 "query_string": b"",
                 "headers": [
@@ -319,6 +320,51 @@ class AuthTests(unittest.IsolatedAsyncioTestCase):
 
         status, _, _ = await self.request("me/contacts", method="GET")
         self.assertEqual(status, 401)
+
+    async def test_other_user_can_read_only_public_contacts_by_id(self):
+        owner, _, _ = await self.register()
+        path = f"/api/users/{owner['id']}/contacts"
+        status, _, _ = await self.request(path, method="GET")
+        self.assertEqual(status, 401)
+
+        status, viewer, _ = await self.request(
+            "register", data={"username": "viewer", "password": "test-password"}
+        )
+        self.assertEqual(status, 201)
+        access = viewer["access_token"]
+        status, profile, _ = await self.request(path, method="GET", access=access)
+        self.assertEqual(status, 200)
+        self.assertEqual(profile, {
+            "user_id": owner["id"], "nickname": "alice_1",
+            "tg_url": None, "vk_url": None,
+        })
+
+        await self.request(
+            "me/contacts", method="PATCH", access=owner["access_token"],
+            data={"tg_url": "https://t.me/alice_1", "vk_url": "https://vk.com/alice_1"},
+        )
+        status, profile, headers = await self.request(path, method="GET", access=access)
+        self.assertEqual(status, 200)
+        self.assertEqual(set(profile), {"user_id", "nickname", "tg_url", "vk_url"})
+        self.assertEqual(profile["tg_url"], "https://t.me/alice_1")
+        self.assertEqual(profile["vk_url"], "https://vk.com/alice_1")
+        self.assertEqual(headers["cache-control"], "no-store")
+
+        # A viewer edits only their own contacts, never the author's.
+        await self.request(
+            "me/contacts", method="PATCH", access=access,
+            data={"tg_url": "https://t.me/viewer"},
+        )
+        _, profile, _ = await self.request(path, method="GET", access=access)
+        self.assertEqual(profile["tg_url"], "https://t.me/alice_1")
+        status, _, _ = await self.request(
+            f"/api/users/{uuid4()}/contacts", method="GET", access=access
+        )
+        self.assertEqual(status, 404)
+        status, _, _ = await self.request(
+            "/api/users/not-a-uuid/contacts", method="GET", access=access
+        )
+        self.assertEqual(status, 422)
 
     async def test_independent_sessions_rotation_and_logout(self):
         first, refresh, _ = await self.register()

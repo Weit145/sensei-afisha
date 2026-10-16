@@ -28,6 +28,11 @@ class UserContactsResponse(BaseModel):
     vk_url: str | None
 
 
+class UserPublicContactsResponse(UserContactsResponse):
+    user_id: UUID
+    nickname: str
+
+
 class UpdateUserContactsRequest(BaseModel):
     tg_url: str | None = Field(
         default=None,

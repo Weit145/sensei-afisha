@@ -8,6 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.config import settings
+from src.domain.err import NotFoundError
 from src.domain.user import User, UserRole
 from src.infrastructure.jwt import (
     create_refresh_token,
@@ -141,6 +142,12 @@ class AuthService:
         db_user = await self.repo.get_by_user_id(session, user_session.user_id)
         if db_user is None:
             raise InvalidTokenError
+        return map_to_domain(db_user)
+
+    async def get_user_contacts(self, user_id: UUID, session: AsyncSession) -> User:
+        db_user = await self.repo.get_by_user_id(session, user_id)
+        if db_user is None:
+            raise NotFoundError("Пользователь не найден")
         return map_to_domain(db_user)
 
     async def update_contacts(
