@@ -38,4 +38,4 @@ class MessageModel(Base):
         DateTime(timezone=True), nullable=True
     )
 
-    afisha: Mapped["AfishaModel"] = relationship("AfishaModel")
+    afisha: Mapped["AfishaModel"] = relationship(back_populates="messages")

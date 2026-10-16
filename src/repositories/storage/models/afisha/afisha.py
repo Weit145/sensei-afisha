@@ -91,3 +91,7 @@ class AfishaModel(Base):
         back_populates="afisha",
         cascade="all, delete-orphan",
     )
+
+    messages: Mapped[list["MessageModel"]] = relationship(
+        back_populates="afisha",
+    )
