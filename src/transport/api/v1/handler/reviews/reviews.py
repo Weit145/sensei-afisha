@@ -1,3 +1,4 @@
+import logging
 
 import uuid
 from typing import Annotated
@@ -26,7 +27,9 @@ from src.transport.api.v1.schemas.reviews.reviews import (
     UpdateReviewRequest,
 )
 from src.usecase.reviews.reviews_service import ReviewsService
+from src.usecase.notification_service import notification_service
 
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["Reviews"])
 SessionDep = Annotated[AsyncSession, Depends(db_helper.get_session)]
@@ -120,14 +123,37 @@ async def create_review(
             rating=data.rating,
             text=data.text,
         )
+
         await session.commit()
+
     except DomainError as error:
         await session.rollback()
         map_error_to_http_status_code(error)
+
     except IntegrityError as exc:
         await session.rollback()
         _handle_integrity_error(exc)
-    return ReviewResponse.model_validate(review)
+
+    except Exception:
+        await session.rollback()
+        logger.exception("Ошибка при создании отзыва")
+        raise
+
+    response = ReviewResponse.model_validate(review)
+
+    try:
+        await notification_service.SendAboutNewFeedBack(
+            afisha_id=afisha_id,
+            text=review.text,
+            user_id=current_user.user_id,
+        )
+    except Exception:
+        logger.exception(
+            "Не удалось отправить уведомление о новом отзыве %s",
+            review.id,
+        )
+
+    return response
 
 
 @router.patch(
@@ -178,3 +204,4 @@ async def delete_review(
     except DomainError as error:
         await session.rollback()
         map_error_to_http_status_code(error)
+
