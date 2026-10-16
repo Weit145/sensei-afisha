@@ -153,6 +153,17 @@ class NotificationService:
             await ws.send_text(payload)
         except Exception:
             logger.exception("Failed to send to connection_id=%s", connection_id)
+    async def SendToMainMenu(self, text: str) -> None:
+        notification = Notification(
+            type=NotificationType.MAIN_MENU,
+            payload={"text": text},
+        )
+        payload = notification.model_dump_json()
+        connection_ids = list(self.rooms.get(MAIN_MENU_ID, set()))
 
+        for connection_id in connection_ids:
+            ws = self.local.get(connection_id)
+            if ws is not None:
+                await self._safe_send(ws, payload, connection_id)
 
 notification_service = NotificationService(redis_notification_repository, 0)
