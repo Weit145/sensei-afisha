@@ -1,7 +1,10 @@
 """Заполнить локальный API демонстрационными афишами и постерами."""
 
 import argparse
+import getpass
 import json
+import os
+import sys
 import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -48,8 +51,14 @@ def request_json(
     method: str = "GET",
     body: bytes | None = None,
     content_type: str | None = None,
+    token: str | None = None,
+    csrf: bool = False,
 ) -> dict:
     headers = {"Content-Type": content_type} if content_type else {}
+    if token is not None:
+        headers["Authorization"] = f"Bearer {token}"
+    if csrf:
+        headers["X-Requested-With"] = "XMLHttpRequest"
     request = Request(f"{base_url}{path}", data=body, headers=headers, method=method)
     try:
         with urlopen(request, timeout=30) as response:
@@ -100,6 +109,30 @@ def next_monday_evening() -> datetime:
     return start if start > now else start + timedelta(days=7)
 
 
+def admin_token(base_url: str) -> str:
+    password = os.environ.get("SEED_ADMIN_PASSWORD") or os.environ.get("ADMIN_PASSWORD")
+    if not password:
+        if not sys.stdin.isatty():
+            raise RuntimeError(
+                "Укажите SEED_ADMIN_PASSWORD в окружении для запуска без терминала"
+            )
+        password = getpass.getpass("Пароль администратора admin: ")
+    if not password:
+        raise RuntimeError("Пароль администратора не может быть пустым")
+
+    response = request_json(
+        base_url,
+        "/api/auth/login",
+        method="POST",
+        body=json.dumps({"username": "admin", "password": password}).encode("utf-8"),
+        content_type="application/json",
+        csrf=True,
+    )
+    if response.get("role") != "admin" or not response.get("access_token"):
+        raise RuntimeError("Вход выполнен без прав администратора")
+    return response["access_token"]
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--base-url", default="http://127.0.0.1:8080")
@@ -110,6 +143,7 @@ def main() -> None:
         if not poster.is_file():
             raise FileNotFoundError(f"Постер не найден: {poster}")
 
+    token = admin_token(base_url)
     venue = find_item(base_url, "/api/venues", VENUE["name"], "name")
     if venue is None:
         venue = request_json(
@@ -118,6 +152,7 @@ def main() -> None:
             method="POST",
             body=json.dumps(VENUE, ensure_ascii=False).encode("utf-8"),
             content_type="application/json",
+            token=token,
         )
         print(f"Создана площадка: {venue['id']}")
     else:
@@ -148,6 +183,7 @@ def main() -> None:
             method="POST",
             body=body,
             content_type=content_type,
+            token=token,
         )
         image_url = created["images"][0]["image_url"]
         print(f"Создан концерт: {title} — {created['id']} ({image_url})")
