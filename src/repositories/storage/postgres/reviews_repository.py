@@ -11,6 +11,7 @@ from src.repositories.storage.map.reviews.afisha_reviews import AfishaReviewsMap
 from src.repositories.storage.map.reviews.reviews import ReviewMapper
 from src.repositories.storage.models.reviews.afisha_reviews import AfishaReviewsModel
 from src.repositories.storage.models.reviews.reviews import ReviewsModel
+from src.repositories.storage.models.user import UserModel
 
 
 class AfishaReviewsRepository:
@@ -46,8 +47,9 @@ class AfishaReviewsRepository:
         if stats_model is None:
             return None
 
-        rows = await self.session.scalars(
-            select(ReviewsModel)
+        rows = await self.session.execute(
+            select(ReviewsModel, UserModel.username)
+            .outerjoin(UserModel, UserModel.id == ReviewsModel.author_id)
             .where(ReviewsModel.afisha_reviews_id == stats_model.id)
             .order_by(ReviewsModel.created_at.desc(), ReviewsModel.id.desc())
             .limit(limit)
@@ -55,8 +57,8 @@ class AfishaReviewsRepository:
         )
         stats = AfishaReviewsMapper.to_domain(stats_model)
         reviews = [
-            ReviewMapper.to_domain(row, afisha_id=afisha_id)
-            for row in rows.all()
+            ReviewMapper.to_domain(row, afisha_id=afisha_id, nickname=nickname)
+            for row, nickname in rows.all()
         ]
         return stats, reviews
 
@@ -92,7 +94,10 @@ class AfishaReviewsRepository:
         stats.rating_sum += review.rating
         stats.reviews_count += 1
         await self.session.flush()
-        return ReviewMapper.to_domain(model, afisha_id=review.afisha_id)
+        nickname = await self.session.scalar(
+            select(UserModel.username).where(UserModel.id == review.author_id)
+        )
+        return ReviewMapper.to_domain(model, afisha_id=review.afisha_id, nickname=nickname)
 
     async def update_review(
         self,
@@ -107,15 +112,19 @@ class AfishaReviewsRepository:
         if stats is None:
             return None
 
-        model = await self.session.scalar(
-            select(ReviewsModel).where(
+        result = await self.session.execute(
+            select(ReviewsModel, UserModel.username)
+            .outerjoin(UserModel, UserModel.id == ReviewsModel.author_id)
+            .where(
                 ReviewsModel.id == review_id,
                 ReviewsModel.afisha_reviews_id == stats.id,
                 ReviewsModel.author_id == author_id,
             )
         )
-        if model is None:
+        row = result.one_or_none()
+        if row is None:
             return None
+        model, nickname = row
 
         if rating is not None:
             Review.validate_rating(rating)
@@ -127,7 +136,7 @@ class AfishaReviewsRepository:
         if rating is not None or text is not None:
             model.updated_at = utc_now()
         await self.session.flush()
-        return ReviewMapper.to_domain(model, afisha_id=afisha_id)
+        return ReviewMapper.to_domain(model, afisha_id=afisha_id, nickname=nickname)
 
     async def delete_review(
         self, afisha_id: uuid.UUID, review_id: uuid.UUID, author_id: uuid.UUID

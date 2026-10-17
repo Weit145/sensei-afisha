@@ -4,6 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#782b38" />
+    <script id="theme-init">
+      (() => {
+        let saved;
+        try { saved = localStorage.getItem('musical-monday:theme'); } catch {}
+        const theme = saved === 'light' || saved === 'dark' ? saved : window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.style.colorScheme = theme;
+      })();
+    </script>
     <meta name="description" content="Клуб «Музыкального понедельника»: концерты в Георгиевском зале, впечатления и люди, с которыми хочется слушать музыку." />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>Музыкальный понедельник — афиша и клуб</title>

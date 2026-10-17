@@ -1,3 +1,6 @@
+export const DEFAULT_MAP_CENTER = [59.9343, 30.3351];
+export const DEFAULT_MAP_ZOOM = 12;
+
 export function coordinates(latitude, longitude) {
   if ([latitude, longitude].some(value => value == null || typeof value === 'boolean' || (typeof value === 'string' && !value.trim()))) return null;
   const lat = Number(latitude), lng = Number(longitude);

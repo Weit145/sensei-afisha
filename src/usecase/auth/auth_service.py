@@ -144,6 +144,11 @@ class AuthService:
             raise InvalidTokenError
         return map_to_domain(db_user)
 
+    async def get_followed_afisha_ids(
+        self, user_id: UUID, session: AsyncSession
+    ) -> list[UUID]:
+        return await self.repo.get_followed_afisha_ids(session, user_id)
+
     async def get_user_contacts(self, user_id: UUID, session: AsyncSession) -> User:
         db_user = await self.repo.get_by_user_id(session, user_id)
         if db_user is None:

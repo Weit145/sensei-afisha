@@ -7,6 +7,10 @@ from src.repositories.storage.models.user import UserModel
 
 
 class UserRepository(Protocol):
+    async def get_followed_afisha_ids(
+        self, session: AsyncSession, user_id: uuid.UUID
+    ) -> list[uuid.UUID]: ...
+
     async def get_by_username(
         self,
         session: AsyncSession,

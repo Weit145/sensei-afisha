@@ -48,8 +48,8 @@ function ContactsForm({ session }) {
     <form className="form-stack" onSubmit={save} aria-busy={saving} noValidate>
       {['tg_url', 'vk_url'].map(field => <div className="contact-field" key={field}>
         <label htmlFor={field}>{field === 'tg_url' ? 'Telegram' : 'ВКонтакте'}</label>
-        <div className="contact-input-row"><input id={field} name={field} type="url" inputMode="url" autoComplete="off" maxLength={255} value={form[field]} placeholder={field === 'tg_url' ? 'https://t.me/username' : 'https://vk.com/username'} disabled={saving} onChange={event => change(field, event.target.value)} aria-invalid={Boolean(fields[field])} aria-describedby={`${field}-hint${fields[field] ? ` ${field}-error` : ''}`} /><button type="button" className="inline-button" disabled={saving || !form[field]} onClick={() => change(field, '')} aria-label={`Очистить ${field === 'tg_url' ? 'Telegram' : 'ВКонтакте'}`}>Убрать</button></div>
-        <small id={`${field}-hint`}>{field === 'tg_url' ? 'HTTPS-ссылка на t.me или telegram.me.' : 'HTTPS-ссылка на vk.com.'}</small>
+        <div className="contact-input-row"><input id={field} name={field} type="url" inputMode="url" autoComplete="off" maxLength={255} value={form[field]} placeholder={field === 'tg_url' ? 'https://t.me/username' : 'https://vk.ru/username'} disabled={saving} onChange={event => change(field, event.target.value)} aria-invalid={Boolean(fields[field])} aria-describedby={`${field}-hint${fields[field] ? ` ${field}-error` : ''}`} /><button type="button" className="inline-button" disabled={saving || !form[field]} onClick={() => change(field, '')} aria-label={`Очистить ${field === 'tg_url' ? 'Telegram' : 'ВКонтакте'}`}>Убрать</button></div>
+        <small id={`${field}-hint`}>{field === 'tg_url' ? 'HTTPS-ссылка на t.me или telegram.me.' : 'HTTPS-ссылка на vk.ru или vk.com.'}</small>
         {fields[field] && <p id={`${field}-error`} className="form-error" role="alert">{fields[field]}</p>}
       </div>)}
       <p className="small-text muted">Чтобы удалить контакт, очистите поле и сохраните изменения.</p>

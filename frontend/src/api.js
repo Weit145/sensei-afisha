@@ -143,6 +143,9 @@ export function createApiClient({ base = BASE, fetcher = (...args) => fetch(...a
 
   return {
     request, searchPlaces, getSession: () => user,
+    followedConcerts: signal => request('/auth/me/follows', { auth: true, cache: 'no-store', signal }),
+    followConcert: (id, signal) => request(`/afisha/${key(id)}/follow`, { method: 'POST', auth: true, signal }),
+    unfollowConcert: (id, signal) => request(`/afisha/${key(id)}/follow`, { method: 'DELETE', auth: true, signal }),
     subscribe(listener) { listeners.add(listener); return () => listeners.delete(listener); },
     restoreSession() {
       if (!restoreFlight) {
@@ -265,7 +268,7 @@ export function connectDiscussion(id, { onUpdate, onStatus, onParticipant, WebSo
     current.onopen = () => {
       if (stopped) { current.close(); return; }
       cancel(watchdog);
-      current.send(JSON.stringify({ action: 'switch_afisha', afisha_id: id }));
+      current.send(JSON.stringify(id == null ? { action: 'leave_to_main_menu' } : { action: 'switch_afisha', afisha_id: id }));
       watchdog = schedule(() => current.close(), 15000);
     };
     const ping = () => {
@@ -276,15 +279,15 @@ export function connectDiscussion(id, { onUpdate, onStatus, onParticipant, WebSo
       if (stopped) return;
       let data;
       try { data = JSON.parse(event.data); } catch { return; }
-      if (data.type === 'subscribed' && data.afisha_id === id) {
+      if ((id == null && data.type === 'unsubscribed') || (data.type === 'subscribed' && data.afisha_id === id)) {
         cancel(watchdog); onStatus?.('connected'); onUpdate?.();
         stableTimer = schedule(() => { attempts = 0; }, 60000);
         pingTimer = schedule(ping, 25000);
       } else if (data.type === 'pong') {
         cancel(watchdog); pingTimer = schedule(ping, 25000);
-      } else if (data.n_type === 2 || data.n_type === 3) {
+      } else if (data.type === 'followers_updated' || data.n_type === 1 || data.n_type === 2 || data.n_type === 3) {
         if (typeof data.user_id === 'string' && typeof data.nickname === 'string' && data.nickname) onParticipant?.({ user_id: data.user_id, nickname: data.nickname });
-        onUpdate?.();
+        onUpdate?.(data);
       }
     };
     current.onerror = () => current.close();
@@ -301,3 +304,5 @@ export function connectDiscussion(id, { onUpdate, onStatus, onParticipant, WebSo
     if (socket) { socket.onclose = socket.onmessage = socket.onopen = socket.onerror = null; socket.close(); }
   };
 }
+
+export const connectMainMenu = options => connectDiscussion(null, options);

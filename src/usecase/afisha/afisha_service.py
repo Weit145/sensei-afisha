@@ -61,6 +61,7 @@ class AfishaService:
         except Exception:
             await session.rollback()
             raise
+        await self._notify_followers(afisha_id, session)
 
     async def unfollow_afisha(
         self, afisha_id: uuid.UUID, user_id: uuid.UUID, session: AsyncSession
@@ -71,6 +72,17 @@ class AfishaService:
         except Exception:
             await session.rollback()
             raise
+        await self._notify_followers(afisha_id, session)
+
+    async def _notify_followers(
+        self, afisha_id: uuid.UUID, session: AsyncSession
+    ) -> None:
+        try:
+            stats = await self.afisha_stats_repo.get_by_afisha_id(session, afisha_id)
+            if stats is not None:
+                await self.event.SendFollowersUpdated(afisha_id, stats.followers_count)
+        except Exception:
+            logger.exception("Не удалось отправить счётчик подписчиков %s", afisha_id)
 
     async def create_afisha(
         self,
@@ -101,7 +113,10 @@ class AfishaService:
                 except Exception:
                     logger.exception("Не удалось удалить изображение %s", file_name)
             raise
-        await self.event.SendToMainMenu("Новая афиша")
+        try:
+            await self.event.SendToMainMenu("Новая афиша")
+        except Exception:
+            logger.exception("Не удалось отправить уведомление о новой афише %s", afisha.id)
         return result
 
     async def update_afisha(

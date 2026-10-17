@@ -44,6 +44,7 @@ def map_to_response(message: Message) -> MessageResponse:
         id=message.id,
         afisha_id=message.afisha_id,
         author_id=message.author_id,
+        nickname=message.nickname,
         text=message.text if message.deleted_at is None else "Сообщение удалено",
         created_at=message.created_at,
     )

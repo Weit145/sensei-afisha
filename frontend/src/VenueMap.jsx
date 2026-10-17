@@ -1,7 +1,7 @@
 import { Component, useEffect, useId, useRef, useState } from 'react';
 import { api, MAP_ATTRIBUTION, MAP_TILE_URL } from './api.js';
 import { Icon } from './components.jsx';
-import { coordinates, osmLink, roundedCoordinates } from './mapUtils.js';
+import { coordinates, DEFAULT_MAP_CENTER, DEFAULT_MAP_ZOOM, osmLink, roundedCoordinates } from './mapUtils.js';
 import 'leaflet/dist/leaflet.css';
 
 class MapBoundary extends Component {
@@ -34,7 +34,7 @@ function VenueMapContent({ latitude, longitude, onChange, name = 'Площадк
         if (controller.signal.aborted) return;
         map = L.map(elementRef.current, { scrollWheelZoom: false, keyboard: true, zoomControl: true, maxZoom: 19 }); mapRef.current = map;
         const current = valuesRef.current.point;
-        map.setView(current || [20, 0], current ? 16 : 2);
+        map.setView(current || DEFAULT_MAP_CENTER, current ? 16 : DEFAULT_MAP_ZOOM);
         map.getContainer().setAttribute('aria-label', editable ? 'Карта выбора положения площадки' : `Расположение: ${name}`);
         map.getContainer().setAttribute('aria-describedby', hintId);
         map.getContainer().setAttribute('role', 'region');

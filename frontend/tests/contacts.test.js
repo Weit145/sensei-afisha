@@ -19,6 +19,8 @@ function clientFixture(handler) {
 test('contact URLs match backend domains; empty input deletes a contact', () => {
   for (const value of ['https://t.me/listener', 'https://telegram.me/listener', ' https://T.ME/listener ']) assert.equal(contactValue(value, 'tg_url'), value.trim());
   assert.equal(contactValue('https://vk.com/listener', 'vk_url'), 'https://vk.com/listener');
+  assert.equal(contactValue(' https://vk.ru/listener ', 'vk_url'), 'https://vk.ru/listener');
+  for (const value of ['http://vk.ru/listener', 'https://vk.ru/', 'https://vk.ru.evil.test/listener', 'https://user@vk.ru/listener']) assert.throws(() => contactValue(value, 'vk_url'));
   assert.deepEqual(contactsPayload({ tg_url: ' ', vk_url: '' }), { body: { tg_url: null, vk_url: null }, errors: {} });
   for (const value of ['http://t.me/listener', 'https://t.me/', 'https://t.me:443/listener', 'https://user@t.me/listener', 'https://t.me.evil.test/listener', 'https://vk.com/listener', 'javascript:alert(1)', 'https://t.me/hello world', 'https://t.me\\evil.test/name', `https://t.me/${'a'.repeat(256)}`]) assert.throws(() => contactValue(value, 'tg_url'), value);
   assert.throws(() => contactValue('https://telegram.me/listener', 'vk_url'));
@@ -34,9 +36,9 @@ test('own contacts round-trip add/change/delete; PATCH includes CSRF and preserv
   });
   await client.login('listener', 'password');
   assert.deepEqual(await client.myContacts(), { tg_url: null, vk_url: null });
-  await client.updateContacts({ tg_url: 'https://t.me/first', vk_url: 'https://vk.com/first' });
+  await client.updateContacts({ tg_url: 'https://t.me/first', vk_url: 'https://vk.ru/first' });
   await client.updateContacts({ tg_url: 'https://telegram.me/second' });
-  assert.equal((await client.myContacts()).vk_url, 'https://vk.com/first');
+  assert.equal((await client.myContacts()).vk_url, 'https://vk.ru/first');
   await client.updateContacts({ tg_url: null, vk_url: null });
   assert.deepEqual(await client.myContacts(), { tg_url: null, vk_url: null });
   for (const call of calls.filter(call => call.url.endsWith('/contacts'))) {

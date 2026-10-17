@@ -14,6 +14,7 @@ class Message(Entity):
     author_id: uuid.UUID
     text: str
     deleted_at: datetime | None = None
+    nickname: str = ""
 
     def __post_init__(self) -> None:
         self.text = self.text.strip()

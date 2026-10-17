@@ -156,6 +156,31 @@ class NotificationConnectionTests(unittest.IsolatedAsyncioTestCase):
         payload = json.loads(socket.send_text.await_args.args[0])
         self.assertEqual(payload["user_id"], str(author_id))
         self.assertEqual(payload["nickname"], "listener_1")
+        self.assertEqual(payload["n_type"], 3)
+
+    async def test_new_concert_has_main_menu_type_and_stays_out_of_concert_room(self):
+        service = NotificationService(AsyncMock(spec=RedisNotificationRepository), 0)
+        home, concert = AsyncMock(), AsyncMock()
+        await service.Connect(home, "127.0.0.1")
+        concert_connection = await service.Connect(concert, "127.0.0.1")
+        await service.Subscribe(concert_connection, uuid4())
+        await service.SendToMainMenu("Новая афиша")
+        self.assertEqual(json.loads(home.send_text.await_args.args[0])["n_type"], 1)
+        concert.send_text.assert_not_awaited()
+
+    async def test_follow_count_reaches_home_and_concert_subscribers(self):
+        service = NotificationService(AsyncMock(spec=RedisNotificationRepository), 0)
+        home, concert = AsyncMock(), AsyncMock()
+        await service.Connect(home, "127.0.0.1")
+        concert_connection = await service.Connect(concert, "127.0.0.1")
+        afisha_id = uuid4()
+        await service.Subscribe(concert_connection, afisha_id)
+        await service.SendFollowersUpdated(afisha_id, 2)
+        for socket in (home, concert):
+            self.assertEqual(json.loads(socket.send_text.await_args.args[0]), {
+                "type": "followers_updated", "afisha_id": str(afisha_id),
+                "followers_count": 2,
+            })
 
 
 class ASGISocket:
@@ -268,6 +293,8 @@ class DiscussionWebSocketTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(await second.receive_json(), expected)
         _, history = await self.fixture.request()
         self.assertEqual(history["items"][0]["id"], saved["id"])
+        self.assertEqual(saved["nickname"], "pagination-test")
+        self.assertEqual(history["items"][0]["nickname"], "pagination-test")
 
     async def test_switch_unsubscribe_and_disconnect_isolate_rooms(self):
         socket = await self.socket()

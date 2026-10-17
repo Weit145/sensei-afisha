@@ -42,7 +42,7 @@ class UpdateUserContactsRequest(BaseModel):
     vk_url: str | None = Field(
         default=None,
         max_length=255,
-        examples=["https://vk.com/username"],
+        examples=["https://vk.ru/username"],
     )
 
     @field_validator("tg_url", "vk_url", mode="before")
@@ -61,7 +61,7 @@ class UpdateUserContactsRequest(BaseModel):
     @field_validator("vk_url")
     @classmethod
     def validate_vk_url(cls, value: str | None) -> str | None:
-        return cls.validate_social_url(value, {"vk.com"}, "VK")
+        return cls.validate_social_url(value, {"vk.ru", "vk.com"}, "VK")
 
     @model_validator(mode="after")
     def require_contact(self) -> "UpdateUserContactsRequest":

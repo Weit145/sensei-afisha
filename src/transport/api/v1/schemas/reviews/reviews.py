@@ -30,6 +30,7 @@ class ReviewResponse(BaseModel):
     id: uuid.UUID
     afisha_id: uuid.UUID
     author_id: uuid.UUID | None
+    nickname: str | None
     rating: int
     text: str
     created_at: datetime
