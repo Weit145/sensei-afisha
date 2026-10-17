@@ -44,6 +44,7 @@ class MessageService:
         await self._require_afisha(message.afisha_id, session)
         try:
             created = await self.repo.create_message(message, session)
+            created.nickname = nickname
             await self.repo.commit(session)
         except IntegrityError:
             # A concert or author may have been removed after the existence checks.

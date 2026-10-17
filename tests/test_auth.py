@@ -4,7 +4,7 @@ import os
 import unittest
 from datetime import UTC, datetime, timedelta
 from http.cookies import SimpleCookie
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 from uuid import UUID, uuid4
 
 from alembic import command
@@ -18,6 +18,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from src.core.config import Settings, settings
 from src.infrastructure.jwt import decode_token, hash_refresh_token
 from src.main import app
+from src.repositories.storage.models import AfishaModel, UserModel, VenueModel
 from src.repositories.storage.postgres.db_helper import db_helper
 from src.repositories.storage.postgres.user.user_repository import (
     SQLAlchemyUserRepository,
@@ -321,6 +322,28 @@ class AuthTests(unittest.IsolatedAsyncioTestCase):
         status, _, _ = await self.request("me/contacts", method="GET")
         self.assertEqual(status, 401)
 
+    async def test_vk_ru_contact_can_be_saved_updated_read_and_cleared(self):
+        user, _, _ = await self.register()
+        access = user["access_token"]
+        for url in ("https://vk.ru/alice_1", "https://vk.com/alice_1", "https://vk.ru/id123"):
+            status, contacts, _ = await self.request(
+                "me/contacts", method="PATCH", access=access, data={"vk_url": url}
+            )
+            self.assertEqual((status, contacts["vk_url"]), (200, url))
+            status, profile, _ = await self.request(
+                f"/api/users/{user['id']}/contacts", method="GET", access=access
+            )
+            self.assertEqual((status, profile["vk_url"]), (200, url))
+        for invalid in ("http://vk.ru/alice", "https://vk.ru", "https://vk.ru.evil.test/alice"):
+            status, _, _ = await self.request(
+                "me/contacts", method="PATCH", access=access, data={"vk_url": invalid}
+            )
+            self.assertEqual(status, 422)
+        status, contacts, _ = await self.request(
+            "me/contacts", method="PATCH", access=access, data={"vk_url": None}
+        )
+        self.assertEqual((status, contacts["vk_url"]), (200, None))
+
     async def test_other_user_can_read_only_public_contacts_by_id(self):
         owner, _, _ = await self.register()
         path = f"/api/users/{owner['id']}/contacts"
@@ -365,6 +388,153 @@ class AuthTests(unittest.IsolatedAsyncioTestCase):
             "/api/users/not-a-uuid/contacts", method="GET", access=access
         )
         self.assertEqual(status, 422)
+
+    async def test_review_mutations_new_concerts_and_follow_counts_reach_websockets(self):
+        from test_discussion_notifications import ASGISocket
+
+        from src.domain.afisha import Afisha
+        from src.repositories.storage.redis.notification_repository import (
+            RedisNotificationRepository,
+        )
+        from src.transport.api.v1.handler.notification import notification as ws_handler
+        from src.transport.api.v1.handler.reviews import reviews as reviews_handler
+        from src.usecase.afisha.afisha_service import afisha_service
+        from src.usecase.notification_service import NotificationService
+
+        user, _, _ = await self.register()
+        now = datetime.now(UTC)
+        venue_id, afisha_id = uuid4(), uuid4()
+        async with self.factory() as session:
+            venue = VenueModel(id=venue_id, name="Test hall", city="Test", address="Test")
+            session.add(AfishaModel(
+                id=afisha_id, title="Finished concert", starts_at=now - timedelta(hours=2),
+                ends_at=now - timedelta(hours=1), venues=[venue],
+            ))
+            await session.commit()
+        notifier = NotificationService(AsyncMock(spec=RedisNotificationRepository), 0)
+        with (
+            patch.object(ws_handler, "notification_service", notifier),
+            patch.object(reviews_handler, "notification_service", notifier),
+            patch.object(afisha_service, "event", notifier),
+        ):
+            home, concert = ASGISocket(app), ASGISocket(app)
+            try:
+                await home.open()
+                await concert.open()
+                await concert.subscribe(afisha_id)
+                reviews_path = f"/api/afisha/{afisha_id}/reviews"
+                status, review, _ = await self.request(
+                    reviews_path, access=user["access_token"], data={"rating": 5, "text": "Great"}
+                )
+                self.assertEqual(status, 201)
+                self.assertEqual(review["nickname"], user["username"])
+                self.assertEqual((await concert.receive_json())["n_type"], 3)
+                status, edited, _ = await self.request(
+                    f"{reviews_path}/{review['id']}", method="PATCH",
+                    access=user["access_token"], data={"rating": 4, "text": "Edited"},
+                )
+                self.assertEqual(status, 200)
+                self.assertEqual(edited["nickname"], user["username"])
+                status, page, _ = await self.request(reviews_path, method="GET")
+                self.assertEqual(status, 200)
+                self.assertEqual(page["items"][0]["nickname"], user["username"])
+                self.assertEqual((await concert.receive_json())["n_type"], 3)
+                status, _, _ = await self.request(
+                    f"{reviews_path}/{review['id']}", method="DELETE", access=user["access_token"],
+                )
+                self.assertEqual(status, 204)
+                self.assertEqual((await concert.receive_json())["n_type"], 3)
+                for method, count in (("POST", 1), ("DELETE", 0)):
+                    status, _, _ = await self.request(
+                        f"/api/afisha/{afisha_id}/follow", method=method, access=user["access_token"]
+                    )
+                    self.assertEqual(status, 204)
+                    for socket in (home, concert):
+                        event = await socket.receive_json()
+                        self.assertEqual(event, {"type": "followers_updated", "afisha_id": str(afisha_id), "followers_count": count})
+                async with self.factory() as session:
+                    await afisha_service.create_afisha(Afisha(
+                        title="New concert", starts_at=now + timedelta(days=1),
+                        ends_at=now + timedelta(days=1, hours=1), venue_ids=[venue_id],
+                    ), session, None)
+                self.assertEqual((await home.receive_json())["n_type"], 1)
+                await concert.send_json({"action": "ping"})
+                self.assertEqual(await concert.receive_json(), {"type": "pong"})
+            finally:
+                await home.close()
+                await concert.close()
+
+    async def test_review_history_preserves_deleted_authors_and_includes_live_nicknames(self):
+        owner, _, _ = await self.register()
+        status, viewer, _ = await self.request(
+            "register", data={"username": "review_viewer", "password": "test-password"}
+        )
+        self.assertEqual(status, 201)
+        now, afisha_id = datetime.now(UTC), uuid4()
+        async with self.factory() as session:
+            session.add(AfishaModel(
+                id=afisha_id, title="Review nicknames", starts_at=now - timedelta(hours=2),
+                ends_at=now - timedelta(hours=1),
+            ))
+            await session.commit()
+        path = f"/api/afisha/{afisha_id}/reviews"
+        reviews = []
+        for user in (owner, viewer):
+            status, review, _ = await self.request(
+                path, access=user["access_token"], data={"rating": 5, "text": "Great concert"}
+            )
+            self.assertEqual(status, 201)
+            self.assertEqual(review["nickname"], user["username"])
+            reviews.append(review)
+        status, page, _ = await self.request(path, method="GET")
+        self.assertEqual(status, 200)
+        self.assertEqual({item["author_id"]: item["nickname"] for item in page["items"]}, {
+            owner["id"]: owner["username"], viewer["id"]: viewer["username"],
+        })
+        async with self.factory() as session:
+            author = await session.get(UserModel, UUID(owner["id"]))
+            await session.delete(author)
+            await session.commit()
+        status, page, _ = await self.request(path, method="GET")
+        self.assertEqual(status, 200)
+        self.assertEqual(page["stats"]["reviews_count"], 2)
+        by_id = {item["id"]: item for item in page["items"]}
+        self.assertEqual(by_id[reviews[0]["id"]]["author_id"], None)
+        self.assertEqual(by_id[reviews[0]["id"]]["nickname"], None)
+        self.assertEqual(by_id[reviews[1]["id"]]["nickname"], viewer["username"])
+
+    async def test_followed_concerts_restore_from_database_and_are_user_scoped(self):
+        owner, _, _ = await self.register()
+        _, viewer, _ = await self.request(
+            "register", data={"username": "viewer", "password": "test-password"}
+        )
+        afisha_id = uuid4()
+        async with self.factory() as session:
+            session.add(AfishaModel(
+                id=afisha_id, title="Follow test", starts_at=datetime.now(UTC),
+                ends_at=datetime.now(UTC) + timedelta(hours=1),
+            ))
+            await session.commit()
+        path = f"/api/afisha/{afisha_id}/follow"
+        for _ in range(2):
+            status, _, _ = await self.request(path, access=owner["access_token"])
+            self.assertEqual(status, 204)
+        status, ids, headers = await self.request(
+            "me/follows", method="GET", access=owner["access_token"]
+        )
+        self.assertEqual((status, ids), (200, [str(afisha_id)]))
+        self.assertEqual(headers["cache-control"], "no-store")
+        _, ids, _ = await self.request(
+            "me/follows", method="GET", access=viewer["access_token"]
+        )
+        self.assertEqual(ids, [])
+        for _ in range(2):
+            status, _, _ = await self.request(path, method="DELETE", access=owner["access_token"])
+            self.assertEqual(status, 204)
+        _, ids, _ = await self.request("me/follows", method="GET", access=owner["access_token"])
+        self.assertEqual(ids, [])
+        status, _, _ = await self.request("me/follows", method="GET")
+        self.assertEqual(status, 401)
 
     async def test_independent_sessions_rotation_and_logout(self):
         first, refresh, _ = await self.register()

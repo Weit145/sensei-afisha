@@ -42,7 +42,8 @@ class SQLAlchemyMessageRepository:
         before: MessageCursor | None,
     ) -> list[Message]:
         query = (
-            select(MessageModel)
+            select(MessageModel, UserModel.username)
+            .join(UserModel, UserModel.id == MessageModel.author_id)
             .where(MessageModel.afisha_id == afisha_id)
             .order_by(MessageModel.created_at.desc(), MessageModel.id.desc())
             .limit(limit)
@@ -52,8 +53,8 @@ class SQLAlchemyMessageRepository:
                 tuple_(MessageModel.created_at, MessageModel.id)
                 < (before.created_at, before.id)
             )
-        models = await session.scalars(query)
-        return [map_to_domain(model) for model in models]
+        rows = await session.execute(query)
+        return [map_to_domain(model, nickname) for model, nickname in rows]
 
     async def commit(self, session: AsyncSession) -> None:
         await session.commit()

@@ -13,11 +13,12 @@ def map_to_model(message: Message) -> MessageModel:
     )
 
 
-def map_to_domain(model: MessageModel) -> Message:
+def map_to_domain(model: MessageModel, nickname: str = "") -> Message:
     return Message(
         id=model.id,
         afisha_id=model.afisha_id,
         author_id=model.author_id,
+        nickname=nickname,
         text=model.text,
         created_at=model.created_at,
         deleted_at=model.deleted_at,

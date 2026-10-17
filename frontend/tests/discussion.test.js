@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { connectDiscussion, discussionSocketUrl } from '../src/api.js';
+import { connectDiscussion, connectMainMenu, discussionSocketUrl } from '../src/api.js';
 import { averageRating, canCreateReview, mergeMessages } from '../src/utils.js';
 
-function socketFixture() {
+function socketFixture(mainMenu = false) {
   const sockets = [], timers = new Map(); let next = 0;
   class Socket {
     constructor(url) { this.url = url; this.sent = []; sockets.push(this); }
@@ -11,11 +11,37 @@ function socketFixture() {
     close() { this.closed = true; this.onclose?.(); }
     message(data) { this.onmessage?.({ data: JSON.stringify(data) }); }
   }
-  let updates = 0; const statuses = [];
-  const stop = connectDiscussion('concert-id', { url: 'ws://test/api/ws', WebSocketImpl: Socket, onUpdate: () => updates++, onStatus: value => statuses.push(value), schedule: (fn, delay) => { const id = ++next; timers.set(id, { fn, delay }); return id; }, cancel: id => timers.delete(id) });
+  let updates = 0; const statuses = [], participants = [], events = [];
+  const options = { url: 'ws://test/api/ws', WebSocketImpl: Socket, onUpdate: event => { updates++; events.push(event); }, onParticipant: value => participants.push(value), onStatus: value => statuses.push(value), schedule: (fn, delay) => { const id = ++next; timers.set(id, { fn, delay }); return id; }, cancel: id => timers.delete(id) };
+  const stop = mainMenu ? connectMainMenu(options) : connectDiscussion('concert-id', options);
   const tick = delay => { const entry = [...timers].find(([, value]) => value.delay === delay); assert.ok(entry, `timer ${delay} exists`); timers.delete(entry[0]); entry[1].fn(); };
-  return { sockets, timers, tick, stop, statuses, get updates() { return updates; } };
+  return { sockets, timers, tick, stop, statuses, participants, events, get updates() { return updates; } };
 }
+
+test('main-menu subscription delivers new concerts and follower counts and catches up on reconnect', () => {
+  const f = socketFixture(true), socket = f.sockets[0];
+  socket.onopen(); assert.deepEqual(socket.sent[0], { action: 'leave_to_main_menu' });
+  socket.message({ type: 'connected' }); assert.equal(f.updates, 0);
+  socket.message({ type: 'unsubscribed' }); assert.equal(f.updates, 1);
+  const concert = { n_type: 1, text: 'Новая афиша', user_id: '', nickname: '' };
+  socket.message(concert); assert.deepEqual(f.events.at(-1), concert);
+  const followers = { type: 'followers_updated', afisha_id: 'concert-id', followers_count: 2 };
+  socket.message(followers); assert.deepEqual(f.events.at(-1), followers);
+  f.tick(25000); socket.message({ type: 'pong' });
+  socket.close(); f.tick(1000);
+  f.sockets.at(-1).onopen(); f.sockets.at(-1).message({ type: 'unsubscribed' });
+  assert.equal(f.events.at(-1), undefined);
+  f.stop(); assert.equal(f.timers.size, 0);
+});
+
+test('review notifications preserve their event type for the review component', () => {
+  const f = socketFixture(), socket = f.sockets[0];
+  socket.onopen(); socket.message({ type: 'subscribed', afisha_id: 'concert-id' });
+  socket.message({ n_type: 3, user_id: 'reviewer', nickname: 'listener', text: 'Отзыв' });
+  assert.equal(f.events.at(-1).n_type, 3);
+  assert.deepEqual(f.participants.at(-1), { user_id: 'reviewer', nickname: 'listener' });
+  f.stop();
+});
 
 test('socket subscribes, invalidates GET history, pings, and cleans up on leave', () => {
   const f = socketFixture(), socket = f.sockets[0];
@@ -24,6 +50,8 @@ test('socket subscribes, invalidates GET history, pings, and cleans up on leave'
   socket.message({ type: 'subscribed', afisha_id: 'concert-id' }); assert.equal(f.updates, 1);
   socket.message({ n_type: 2, text: 'Notification text is never a message', user_id: 'u' }); assert.equal(f.updates, 2);
   socket.message({ n_type: 3 }); assert.equal(f.updates, 3);
+  socket.message({ n_type: 2, user_id: 'author', nickname: 'true_nickname', text: 'not a persisted message' });
+  assert.deepEqual(f.participants, [{ user_id: 'author', nickname: 'true_nickname' }]); assert.equal(f.updates, 4);
   f.tick(25000); assert.deepEqual(socket.sent.at(-1), { action: 'ping' });
   socket.message({ type: 'pong' }); assert.equal([...f.timers.values()].some(value => value.delay === 10000), false);
   f.stop(); assert.equal(socket.closed, true); assert.equal(f.timers.size, 0); assert.equal(socket.onmessage, null);

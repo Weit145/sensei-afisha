@@ -180,6 +180,12 @@ async def update_review(
     except DomainError as error:
         await session.rollback()
         map_error_to_http_status_code(error)
+    try:
+        await notification_service.SendAboutNewFeedBack(
+            afisha_id, review.text, current_user.user_id, current_user.username
+        )
+    except Exception:
+        logger.exception("Не удалось отправить уведомление об изменении отзыва %s", review_id)
     return ReviewResponse.model_validate(review)
 
 
@@ -204,3 +210,9 @@ async def delete_review(
     except DomainError as error:
         await session.rollback()
         map_error_to_http_status_code(error)
+    try:
+        await notification_service.SendAboutNewFeedBack(
+            afisha_id, "Отзыв удалён", current_user.user_id, current_user.username
+        )
+    except Exception:
+        logger.exception("Не удалось отправить уведомление об удалении отзыва %s", review_id)

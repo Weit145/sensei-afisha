@@ -11,10 +11,12 @@ class ReviewMapper:
     def to_domain(
         model: ReviewsModel,
         afisha_id: uuid.UUID,
+        nickname: str | None = None,
     ) -> Review:
         return Review(
             id=model.id,
             author_id=model.author_id,
+            nickname=nickname,
             afisha_id=afisha_id,
             rating=model.rating,
             text=model.text,

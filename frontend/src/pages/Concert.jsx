@@ -3,16 +3,23 @@ import { api } from '../api.js';
 import { ErrorState, Icon, Link, Poster } from '../components.jsx';
 import Discussion from '../Discussion.jsx';
 import Reviews from '../Reviews.jsx';
+import ContactCard from '../ContactCard.jsx';
+import VenueMap from '../VenueMap.jsx';
+import { coordinates } from '../mapUtils.js';
 import { averageRating, dateLong, isPast, time, weekday } from '../utils.js';
 
-export default function Concert({ id, plans, togglePlan, session, openAuth, notify }) {
+export default function Concert({ id, plans, togglePlan, session, openAuth, notify, pendingPlans = [], plansBusy = false, catalogRevision = 0, followerCounts = {} }) {
   const [concert, setConcert] = useState(null);
   const [venues, setVenues] = useState([]);
   const [venueError, setVenueError] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [revision, setRevision] = useState(0);
+  const [reviewRevision, setReviewRevision] = useState(0);
+  const refreshReviews = useCallback(event => { if (!event || event.n_type === 3) setReviewRevision(value => value + 1); }, []);
   const planned = plans.includes(id);
+  const [contactUser, setContactUser] = useState(null);
+  const closeContact = useCallback(() => setContactUser(null), []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -28,6 +35,14 @@ export default function Concert({ id, plans, togglePlan, session, openAuth, noti
     }).catch(error => { if (!controller.signal.aborted) setError(error.message); }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
   }, [id, revision]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    api.concert(id, controller.signal).then(data => {
+      if (!controller.signal.aborted) setConcert(current => current ? { ...current, followers_count: data.followers_count } : current);
+    }).catch(() => {});
+    return () => controller.abort();
+  }, [id, catalogRevision]);
 
   const share = useCallback(async () => {
     try { await navigator.clipboard.writeText(location.href); notify('Ссылка на концерт скопирована.'); }
@@ -45,17 +60,18 @@ export default function Concert({ id, plans, togglePlan, session, openAuth, noti
     <div className="detail-layout"><div className="concert-main">
       <section className="event-block" aria-label="О концерте"><Poster event={concert} featured /><div className="event-details">
         <div className="event-facts"><div><Icon name="calendar" size={21} /><span><strong>{dateLong(concert.starts_at)}</strong><small>{weekday(concert.starts_at)}</small></span></div><div><Icon name="clock" size={21} /><span><strong>{time(concert.starts_at)} — {time(concert.ends_at)}</strong><small>время московское</small></span></div><span className="age-badge">{concert.age_limit ?? 0}+</span></div>
-        {venues.map(venue => <div className="venue-fact" key={venue.id}><Icon name="pin" size={21} /><span><strong>{venue.name}</strong><small>{venue.city}, {venue.address}</small></span></div>)}
+        {venues.map(venue => <div className="venue-location" key={venue.id}><div className="venue-fact"><Icon name="pin" size={21} /><span><strong>{venue.name}</strong><small>{venue.city}, {venue.address}</small></span></div>{coordinates(venue.latitude, venue.longitude) && <VenueMap latitude={venue.latitude} longitude={venue.longitude} name={venue.name} />}</div>)}
         {venueError && <p className="muted small-text">Не удалось загрузить часть информации о площадке. <button className="inline-button" onClick={() => setRevision(value => value + 1)}>Повторить</button></p>}
         {cancelled && <div className="notice cancelled-notice">Концерт отменён. Обсуждение остаётся открытым.</div>}
         {!cancelled && past && <div className="notice">Этот концерт уже прошёл. Обсудите его с другими слушателями.</div>}
-        <div className="attendance-row"><button className={`button attendance-button ${planned ? 'is-planned' : ''}`} onClick={() => togglePlan(id)} disabled={!planned && (past || cancelled)} aria-pressed={planned}><Icon name={planned ? 'check' : 'heart'} size={19} />{planned ? 'В моих планах' : 'Хочу пойти'}</button><a href="#discussion" className="text-button">Найти компанию<Icon name="arrow" size={17} /></a></div>
-        <p className="concert-statistics">{averageRating(concert) && <span>★ {averageRating(concert)} / 5 · отзывов: {concert.reviews_count}</span>}<span>Интересуются: {concert.followers_count ?? 0}</span></p>
-        <p className="local-plans-note">Ваши планы сохраняются только в этом браузере и не видны другим участникам.</p>
+        <div className="attendance-row"><button className={`button attendance-button ${planned ? 'is-planned' : ''}`} onClick={() => togglePlan(id)} disabled={plansBusy || pendingPlans.includes(id) || (!planned && (past || cancelled))} aria-busy={pendingPlans.includes(id)} aria-pressed={planned}><Icon name={planned ? 'check' : 'heart'} size={19} />{planned ? 'В моих планах' : 'Хочу пойти'}</button><a href="#discussion" className="text-button">Найти компанию<Icon name="arrow" size={17} /></a></div>
+        <p className="concert-statistics">{averageRating(concert) && <span>★ {averageRating(concert)} / 5 · отзывов: {concert.reviews_count}</span>}<span>Интересуются: {followerCounts[id] ?? concert.followers_count ?? 0}</span></p>
+        <p className="local-plans-note">Отметка «Хочу пойти» сохраняется в вашем аккаунте и учитывается в числе заинтересованных слушателей.</p>
         <div className="description-block"><h2>О концерте</h2>{concert.description ? concert.description.split(/\n\s*\n/).filter(Boolean).map((paragraph, i) => <p key={i}>{paragraph}</p>) : <p className="muted">Подробная программа пока не опубликована. Следите за обновлениями.</p>}</div>
         {concert.images?.length > 1 && <div className="extra-images">{concert.images.filter(image => image.id !== (concert.images.find(image => image.is_cover) || concert.images[0]).id).map(image => <Poster key={image.id} event={{ ...concert, images: [image] }} />)}</div>}
       </div></section>
-      <Reviews concert={concert} session={session} openAuth={openAuth} notify={notify} onStats={stats => setConcert(current => ({ ...current, rating_sum: stats.rating_sum, reviews_count: stats.reviews_count }))} />
-    </div><aside className="discussion-aside"><Discussion id={id} session={session} openAuth={openAuth} /><p className="discussion-footnote">Знакомьтесь, договаривайтесь о встрече<br />и будьте внимательны друг к другу.</p></aside></div>
+      <Reviews refreshKey={reviewRevision} onContact={setContactUser} concert={concert} session={session} openAuth={openAuth} notify={notify} onStats={stats => setConcert(current => ({ ...current, rating_sum: stats.rating_sum, reviews_count: stats.reviews_count }))} />
+    </div><aside className="discussion-aside"><Discussion onActivity={refreshReviews} onContact={setContactUser} id={id} session={session} openAuth={openAuth} /><p className="discussion-footnote">Знакомьтесь, договаривайтесь о встрече<br />и будьте внимательны друг к другу.</p></aside></div>
+    {contactUser && <ContactCard key={`${contactUser}:${session?.id || 'guest'}`} userId={contactUser} session={session} openAuth={openAuth} onClose={closeContact} />}
   </div>;
 }

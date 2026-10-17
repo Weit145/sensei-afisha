@@ -284,6 +284,24 @@ class PaginationPostgresTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(page["has_more"])
         self.assertIsNotNone(page["next_cursor"])
 
+    async def test_first_history_read_includes_each_authors_nickname(self):
+        other_id = uuid.uuid4()
+        async with self.sessions() as session:
+            session.add(UserModel(id=other_id, username="other-listener", role="user"))
+            await session.flush()
+            session.add_all([
+                MessageModel(afisha_id=self.afisha_id, author_id=self.author_id, text="First"),
+                MessageModel(afisha_id=self.afisha_id, author_id=other_id, text="Second"),
+            ])
+            await session.commit()
+        status, page = await self.request()
+        self.assertEqual(status, 200)
+        self.assertEqual({item["author_id"]: item["nickname"] for item in page["items"]}, {
+            str(self.author_id): "pagination-test", str(other_id): "other-listener",
+        })
+        for item in page["items"]:
+            self.assertEqual(set(item), {"id", "afisha_id", "author_id", "nickname", "text", "created_at"})
+
     async def test_all_pages_with_equal_timestamps_have_no_gaps_or_duplicates(self):
         await self.seed(7, same_time=True)
         params = {"limit": 3}
@@ -335,6 +353,7 @@ class PaginationPostgresTests(unittest.IsolatedAsyncioTestCase):
             )
             self.assertEqual(status, 201)
             self.assertEqual(sent["author_id"], str(self.author_id))
+            self.assertEqual(sent["nickname"], "pagination-test")
         _, older = await self.request(
             params={"limit": 2, "before": page["next_cursor"]}
         )

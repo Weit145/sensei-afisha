@@ -1,3 +1,4 @@
+import json
 import logging
 import uuid
 
@@ -146,7 +147,7 @@ class NotificationService:
     ) -> None:
         """Собирает Notification об отзыве и шлёт всем в комнате."""
         notification = Notification(
-            n_type=NotificationType.DISCUSSION,
+            n_type=NotificationType.FEEDBACK,
             text=text,
             user_id=str(user_id),
             nickname=nickname,
@@ -185,7 +186,7 @@ class NotificationService:
 
     async def SendToMainMenu(self, text: str) -> None:
         notification = Notification(
-            n_type=NotificationType.DISCUSSION,
+            n_type=NotificationType.MAIN_MENU,
             text=text,
             user_id="",
         )
@@ -196,6 +197,18 @@ class NotificationService:
             ws = self.local.get(connection_id)
             if ws is not None:
                 await self._safe_send(ws, payload, connection_id)
+
+
+    async def SendFollowersUpdated(
+        self, afisha_id: uuid.UUID, followers_count: int
+    ) -> None:
+        payload = json.dumps({
+            "type": "followers_updated",
+            "afisha_id": str(afisha_id),
+            "followers_count": followers_count,
+        })
+        for connection_id, ws in list(self.local.items()):
+            await self._safe_send(ws, payload, connection_id)
 
 
 notification_service = NotificationService(redis_notification_repository, 0)

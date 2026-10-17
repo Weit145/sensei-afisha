@@ -22,6 +22,7 @@ class MessageResponse(BaseModel):
     id: uuid.UUID
     afisha_id: uuid.UUID
     author_id: uuid.UUID
+    nickname: str
     text: str
     created_at: datetime
 

@@ -15,6 +15,23 @@ function fixture(handler) {
   return { client, calls };
 }
 
+test('plans load from the account and POST/DELETE use the authenticated follow endpoints', async () => {
+  const { client, calls } = fixture(call => {
+    if (call.path === '/auth/login') return auth('follow-token');
+    if (call.path === '/auth/me') return json(user);
+    if (call.path === '/auth/me/follows') return json(['concert-id']);
+    return new Response(null, { status: 204 });
+  });
+  await client.login('listener', 'password123');
+  assert.deepEqual(await client.followedConcerts(), ['concert-id']);
+  await client.followConcert('concert-id');
+  await client.unfollowConcert('concert-id');
+  assert.deepEqual(calls.slice(2).map(call => [call.path, call.method || 'GET']), [
+    ['/auth/me/follows', 'GET'], ['/afisha/concert-id/follow', 'POST'], ['/afisha/concert-id/follow', 'DELETE'],
+  ]);
+  for (const call of calls.slice(2)) assert.equal(call.headers.get('Authorization'), 'Bearer follow-token');
+});
+
 test('register immediately verifies and signs in; all cookie operations carry CSRF + credentials', async () => {
   const { client, calls } = fixture(call => {
     if (call.path === '/auth/me') return json(user);

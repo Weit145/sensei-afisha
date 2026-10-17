@@ -361,3 +361,53 @@ textarea::placeholder{color:#a29a8f}
 @media(max-width:1100px){.site-header nav{gap:18px}.header-inner{gap:20px}.site-header .login-button{max-width:205px}.admin-record-actions{max-width:240px}}
 @media(max-width:800px){.header-inner{flex-wrap:wrap}.site-header:has(nav>a:nth-child(4)){height:auto}.site-header:has(nav>a:nth-child(4)) .header-inner{padding-top:17px}.site-header:has(nav>a:nth-child(4)) nav{order:3;width:100%;height:49px;justify-content:flex-start}.site-header:has(nav>a:nth-child(4)) .login-button{margin-left:auto}.admin-records>article{grid-template-columns:1fr;gap:10px}.admin-record-actions{max-width:none}.admin-page{padding-top:35px}}
 @media(max-width:640px){.header-inner{gap:0}.site-header nav{gap:20px}.site-header nav>a{font-size:11px}.site-header .login-button{max-width:170px}.card-statistics{font-size:9px;gap:2px}.concert-statistics{font-size:11px}.local-plans-note{font-size:11px;line-height:1.8}.plans-privacy{font-size:12px}.connection-status{font-size:11px;padding-inline:20px}.form-columns{grid-template-columns:1fr}.admin-modal{padding-inline:22px}.admin-toolbar>.button{font-size:11px;padding-inline:13px}.admin-toolbar{gap:10px}.admin-records h2{font-size:27px}.admin-record-actions{justify-content:flex-start;gap:10px 24px}.review-meta time{width:100%;margin-left:0}.review-item>p{font-size:13px}.rating-field{gap:7px}.rating-field span{padding:10px 11px}.session-notice{align-items:flex-start;font-size:12px}.admin-images{gap:16px}.form-stack input,.form-stack textarea,.form-stack select{font-size:16px}.form-stack label{font-size:12px}.form-stack>small{font-size:11px}.form-note{font-size:11px!important}.form-error{font-size:12px}}
+
+.contacts-page{padding-block:55px 70px;min-height:65vh}
+.contacts-sheet{max-width:740px;border:1px solid var(--line);background:#fcfbf7;padding:36px}
+.contacts-sheet h2{font:normal 31px/1.25 var(--serif);letter-spacing:-.5px;overflow-wrap:anywhere}
+.contacts-intro{font-size:13px;line-height:1.9;color:var(--muted);margin:18px 0 28px}
+.contacts-loading{padding:40px 0;color:var(--muted);font-size:13px}
+.contact-field{display:flex;flex-direction:column;gap:8px}
+.contact-field>label{font-size:13px;font-weight:500}
+.contact-input-row{display:flex;gap:15px;align-items:center;min-width:0}
+.contact-input-row input{min-width:0;flex:1}
+.contact-input-row button{flex-shrink:0;min-height:44px}
+.contact-field input[aria-invalid=true]{border-color:var(--wine)}
+.contact-success{color:var(--wine);font-size:12px;line-height:1.8}
+.contact-success:empty,.map-status:empty{display:none}
+.contacts-sheet .button{align-self:flex-start}
+.contact-card h2{overflow-wrap:anywhere}
+.contact-card-error{margin:25px 0}
+.contact-links{display:flex;flex-direction:column;gap:12px;margin-bottom:25px}
+.contact-links .button{justify-content:space-between;min-height:48px}
+.author-contact{font-size:inherit;font-weight:600;color:var(--wine);padding:3px 0;display:inline-flex;align-items:center;gap:7px;text-align:left;line-height:1.6;max-width:100%;overflow-wrap:anywhere}
+.author-contact:hover{text-decoration:underline}
+.venue-location .venue-map-section{margin-block:20px}
+.venue-map-section{min-width:0}
+.venue-map-frame{position:relative;isolation:isolate;z-index:0;border:1px solid var(--line);background:#e9e6dd}
+.venue-map{height:270px;width:100%;background:#e9e6dd;font-family:'Golos Text',Arial,sans-serif;outline-offset:-3px}
+.map-picker .venue-map{height:300px}
+.map-loading{position:absolute;inset:0;z-index:1000;display:grid;place-items:center;pointer-events:none;background:#f7f5efcc;color:var(--wine);font-size:13px}
+.map-search{display:flex;align-items:flex-start;flex-direction:column;gap:13px;margin-bottom:18px}
+.map-search p{line-height:1.8}
+.map-search-results{font-size:12px;line-height:1.8;margin-bottom:18px;color:var(--muted)}
+.map-search-results ul{margin:0 0 12px;padding:0;list-style:none;border-top:1px solid var(--line)}
+.map-search-results li{border-bottom:1px solid var(--line)}
+.map-search-results button{width:100%;padding:13px 8px;text-align:left;font-size:12px;color:var(--ink);line-height:1.8}
+.map-search-results button:hover{background:#eeebe3}
+.map-search-results button span{display:block;color:var(--muted);font-size:10px}
+.map-error{padding:14px 16px;border:1px solid var(--line);border-top:0;background:#eee8dc;color:var(--wine);font-size:12px;line-height:1.8;display:flex;flex-direction:column;gap:8px}
+.map-hint{font-size:11px;line-height:1.8;color:var(--muted);margin-top:12px}
+.map-status{font-size:12px;line-height:1.8;color:var(--wine);margin-top:14px}
+.map-position{display:flex;flex-wrap:wrap;align-items:center;gap:10px 20px;font-size:11px;color:var(--muted);margin-top:13px}
+.map-position a,.map-position button{min-height:36px}
+.venue-map-marker{background:none;border:0}
+.venue-map-marker>span{display:block;width:26px;height:26px;border:3px solid var(--paper);border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--wine);box-shadow:0 2px 7px #29282466}
+.venue-map .leaflet-control-attribution{font-family:'Golos Text',Arial,sans-serif;font-size:10px;line-height:1.6;background:#fcfbf7ed;color:var(--ink);max-width:100%;overflow-wrap:anywhere}
+.venue-map .leaflet-control-attribution a{color:var(--wine)}
+.venue-map .leaflet-bar{border:1px solid #c9c1b6;box-shadow:0 2px 8px #29282422}
+.venue-map .leaflet-bar a{background:#fcfbf7;color:var(--wine);width:36px;height:36px;line-height:36px}
+.venue-map .leaflet-control-zoom-in,.venue-map .leaflet-control-zoom-out{font-family:Arial,sans-serif}
+@media(max-width:1100px){.site-header nav{gap:17px}.site-header nav>a{font-size:12px}}
+@media(max-width:800px){.site-header:has(nav>a:nth-child(4)) .header-inner nav,.site-header .header-inner nav{height:auto;min-height:49px;flex-wrap:wrap;column-gap:20px;row-gap:0}.site-header nav>a{min-height:49px;height:auto}.contacts-page{padding-top:35px}.contacts-sheet{padding:28px}}
+@media(max-width:640px){.contacts-page{padding-block:30px 40px}.contacts-sheet{padding:24px 20px}.contacts-sheet h2{font-size:27px}.contacts-intro{font-size:12px}.contact-input-row{gap:10px}.contact-input-row input{font-size:16px}.contacts-sheet .button{width:100%;justify-content:space-between}.author-contact{min-height:32px}.venue-map,.map-picker .venue-map{height:260px}.map-hint{font-size:11px}.map-position{font-size:12px}.contact-field>label{font-size:12px}}

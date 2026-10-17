@@ -12,6 +12,7 @@ class Review(Entity):
     afisha_id: uuid.UUID
     rating: int
     text: str
+    nickname: str | None = None
     updated_at: datetime = field(default_factory=utc_now)
 
     def __post_init__(self) -> None:

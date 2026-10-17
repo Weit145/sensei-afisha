@@ -1,4 +1,5 @@
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
 from fastapi.responses import JSONResponse
@@ -139,6 +140,14 @@ async def get_contacts(
         tg_url=current_user.tg_url,
         vk_url=current_user.vk_url,
     )
+
+
+@router.get("/me/follows", response_model=list[UUID])
+async def get_followed_afishas(
+    current_user: CurrentUserDep, session: SessionDep, response: Response
+) -> list[UUID]:
+    prevent_caching(response)
+    return await auth_service.get_followed_afisha_ids(current_user.user_id, session)
 
 
 @router.patch(
